@@ -1,0 +1,247 @@
+<template>
+  <div class="container">
+    <div class="start-card">
+      <span class="decorative deco-top-left">❧</span>
+      <span class="decorative deco-top-right">❧</span>
+      <span class="decorative deco-bottom-left">❧</span>
+      <span class="decorative deco-bottom-right">❧</span>
+
+      <h1 class="title">重活一世</h1>
+      <p class="subtitle">Live Another Life</p>
+      
+      <div class="divider"></div>
+      
+      <p class="description">
+        从新中国成立那天起<br>
+        重新走过风风雨雨几十年<br>
+        体验不一样的人生轨迹
+      </p>
+
+      <div class="year-range">
+        <span class="year-badge">1949</span>
+        <span style="color: var(--secondary); align-self: center;">—</span>
+        <span class="year-badge">2024</span>
+      </div>
+
+      <button class="start-btn" @click="$emit('next-page')">开始新人生</button>
+
+      <div class="feature-list">
+        <div class="feature-item">
+          <span class="feature-icon">🎲</span>
+          <span>随机人生</span>
+        </div>
+        <div class="feature-item">
+          <span class="feature-icon">📖</span>
+          <span>大事件</span>
+        </div>
+        <div class="feature-item">
+          <span class="feature-icon">📝</span>
+          <span>大事记</span>
+        </div>
+        <div class="feature-item">
+          <span class="feature-icon">⏭</span>
+          <span>跳过功能</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+</script>
+
+<style scoped>
+.container {
+  width: 100%;
+  max-width: 420px;
+  min-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.start-card {
+  width: 100%;
+  background: var(--card-bg);
+  border-radius: 20px;
+  padding: 48px 32px;
+  box-shadow: var(--shadow);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.start-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: linear-gradient(90deg, var(--accent), #E6A23C, var(--accent));
+}
+
+.start-card::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: linear-gradient(90deg, var(--accent), #E6A23C, var(--accent));
+}
+
+.title {
+  font-size: 48px;
+  color: var(--primary);
+  margin-bottom: 8px;
+  letter-spacing: 8px;
+  animation: titleGlow 2s ease-in-out infinite;
+}
+
+@keyframes titleGlow {
+  0%, 100% { text-shadow: 2px 2px 4px rgba(139, 69, 19, 0.2); }
+  50% { text-shadow: 2px 2px 12px rgba(139, 69, 19, 0.35); }
+}
+
+.subtitle {
+  font-size: 13px;
+  color: var(--secondary);
+  letter-spacing: 4px;
+  margin-bottom: 32px;
+}
+
+.divider {
+  width: 60%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--secondary), transparent);
+  margin: 24px auto;
+}
+
+.description {
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.8;
+  margin-bottom: 32px;
+  opacity: 0.85;
+}
+
+.year-range {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin: 24px 0;
+}
+
+.year-badge {
+  background: linear-gradient(135deg, var(--primary), #A0522D);
+  color: white;
+  padding: 8px 20px;
+  border-radius: 20px;
+  font-size: 18px;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(139, 69, 19, 0.3);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.year-badge:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 16px rgba(139, 69, 19, 0.4);
+}
+
+.start-btn {
+  background: linear-gradient(135deg, var(--accent), #DC143C);
+  color: white;
+  border: none;
+  padding: 16px 48px;
+  font-size: 18px;
+  border-radius: 30px;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(196, 30, 58, 0.4);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.start-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(196, 30, 58, 0.5);
+}
+
+.start-btn:active {
+  transform: translateY(-1px) scale(0.98);
+}
+
+.start-btn::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+  transform: rotate(45deg);
+  animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%) rotate(45deg); }
+  100% { transform: translateX(100%) rotate(45deg); }
+}
+
+.feature-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text);
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.feature-item:hover {
+  opacity: 1;
+}
+
+.feature-icon {
+  width: 28px;
+  height: 28px;
+  background: linear-gradient(135deg, var(--secondary), #E8C9A8);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+
+.decorative {
+  position: absolute;
+  font-size: 24px;
+  opacity: 0.12;
+}
+
+.deco-top-left { top: 20px; left: 20px; }
+.deco-top-right { top: 20px; right: 20px; transform: rotate(90deg); }
+.deco-bottom-left { bottom: 20px; left: 20px; transform: rotate(-90deg); }
+.deco-bottom-right { bottom: 20px; right: 20px; transform: rotate(180deg); }
+</style>

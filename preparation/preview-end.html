@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>重活一世 - 人生总结</title>
+  <style>
+    :root {
+      --primary: #8B4513;
+      --secondary: #D4A574;
+      --accent: #C41E3A;
+      --bg: #F5F0E6;
+      --text: #2C1810;
+      --card-bg: rgba(255, 255, 255, 0.95);
+      --shadow: 0 8px 32px rgba(139, 69, 19, 0.2);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", "Segoe UI", Arial, sans-serif;
+      background: var(--bg);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 400px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .header {
+      text-align: center;
+      padding: 32px 20px;
+      background: linear-gradient(135deg, var(--primary), #A0522D);
+      border-radius: 20px;
+      color: white;
+      position: relative;
+      overflow: hidden;
+      animation: fadeInUp 0.5s ease-out;
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 20.5V18H0v-2h20v-2H0v-2h20v-2H0V8h20V6H0V4h20V2H0V0h22v20h2V0h2v20h2V0h2v20h2V0h2v20h2v2H22v2h18v2H22v2h18v2H22v2h18v2H22v2h18v2H22v-2zM2 20v2h2v-2H2zm4 0v2h2v-2H6zm4 0v2h2v-2h-2zm4 0v2h2v-2h-2zm4 0v2h2v-2h-2zm4 0v2h2v-2h-2z' fill='%23FFFFFF' fill-opacity='0.05'/%3E%3C/svg%3E");
+      opacity: 0.5;
+    }
+
+    .header h1 {
+      font-size: 32px;
+      margin-bottom: 8px;
+      position: relative;
+    }
+
+    .header .subtitle {
+      font-size: 14px;
+      opacity: 0.9;
+      position: relative;
+    }
+
+    .life-summary {
+      background: var(--card-bg);
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: var(--shadow);
+      text-align: center;
+      animation: fadeInUp 0.5s ease-out 0.1s both;
+    }
+
+    .portrait {
+      width: 100px;
+      height: 100px;
+      background: linear-gradient(135deg, #E8D5C4, #D4A574);
+      border-radius: 50%;
+      margin: 0 auto 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 48px;
+      box-shadow: 0 6px 20px rgba(139, 69, 19, 0.25);
+      transition: transform 0.3s ease;
+    }
+
+    .portrait:hover {
+      transform: scale(1.05);
+    }
+
+    .person-name {
+      font-size: 24px;
+      color: var(--primary);
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .person-dates {
+      font-size: 13px;
+      color: var(--secondary);
+      margin-bottom: 20px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .stat-box {
+      background: var(--bg);
+      border-radius: 14px;
+      padding: 16px;
+      text-align: center;
+      transition: transform 0.2s ease;
+    }
+
+    .stat-box:hover {
+      transform: translateY(-2px);
+    }
+
+    .stat-icon {
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+
+    .stat-num {
+      font-size: 24px;
+      color: var(--primary);
+      font-weight: 700;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: var(--secondary);
+      margin-top: 4px;
+    }
+
+    .achievements {
+      background: var(--card-bg);
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: var(--shadow);
+      animation: fadeInUp 0.5s ease-out 0.2s both;
+    }
+
+    .section-title {
+      font-size: 14px;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+
+    .achievement-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .achievement-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: linear-gradient(135deg, #FFF9F0, #FFF5E6);
+      border-radius: 12px;
+      border-left: 3px solid var(--accent);
+      transition: all 0.2s ease;
+    }
+
+    .achievement-item:hover {
+      transform: translateX(4px);
+    }
+
+    .achievement-icon {
+      font-size: 24px;
+    }
+
+    .achievement-text {
+      flex: 1;
+    }
+
+    .achievement-name {
+      font-size: 13px;
+      color: var(--text);
+      font-weight: 700;
+    }
+
+    .achievement-desc {
+      font-size: 11px;
+      color: var(--secondary);
+    }
+
+    .timeline-brief {
+      background: var(--card-bg);
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: var(--shadow);
+      animation: fadeInUp 0.5s ease-out 0.3s both;
+    }
+
+    .milestone {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 14px;
+      position: relative;
+    }
+
+    .milestone:not(:last-child)::before {
+      content: '';
+      position: absolute;
+      left: 11px;
+      top: 24px;
+      bottom: -14px;
+      width: 2px;
+      background: var(--secondary);
+      opacity: 0.3;
+    }
+
+    .milestone-year {
+      width: 24px;
+      height: 24px;
+      background: var(--secondary);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      color: white;
+      flex-shrink: 0;
+      transition: transform 0.2s ease;
+    }
+
+    .milestone:nth-child(2) .milestone-year { background: #4CAF50; }
+    .milestone:nth-child(3) .milestone-year { background: #2196F3; }
+    .milestone:nth-child(4) .milestone-year { background: var(--accent); }
+
+    .milestone:hover .milestone-year {
+      transform: scale(1.1);
+    }
+
+    .milestone-content {
+      flex: 1;
+    }
+
+    .milestone-title {
+      font-size: 13px;
+      color: var(--text);
+      font-weight: 700;
+    }
+
+    .milestone-desc {
+      font-size: 11px;
+      color: var(--secondary);
+      margin-top: 2px;
+    }
+
+    .final-stats {
+      background: linear-gradient(135deg, #FFF9F0, #FFE8D6);
+      border-radius: 16px;
+      padding: 20px;
+      text-align: center;
+      border: 2px solid var(--secondary);
+      animation: fadeInUp 0.5s ease-out 0.4s both;
+    }
+
+    .final-quote {
+      font-size: 14px;
+      color: var(--text);
+      font-style: italic;
+      line-height: 1.8;
+      margin-bottom: 12px;
+    }
+
+    .final-author {
+      font-size: 12px;
+      color: var(--secondary);
+    }
+
+    .action-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 16px 24px;
+      font-size: 16px;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-align: center;
+    }
+
+    .btn:active {
+      transform: scale(0.96);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), #DC143C);
+      color: white;
+      border: none;
+      box-shadow: 0 6px 20px rgba(196, 30, 58, 0.35);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 30px rgba(196, 30, 58, 0.45);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--primary);
+      border: 2px solid var(--primary);
+    }
+
+    .btn-secondary:hover {
+      background: var(--primary);
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>人生总结</h1>
+      <p class="subtitle">1985.06.15 — 2024.03.17</p>
+    </div>
+
+    <div class="life-summary">
+      <div class="portrait">👴</div>
+      <div class="person-name">李建国</div>
+      <div class="person-dates">享年 78 岁</div>
+      
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-icon">📝</div>
+          <div class="stat-num">1,247</div>
+          <div class="stat-label">经历事件</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-icon">⭐</div>
+          <div class="stat-num">38</div>
+          <div class="stat-label">重要时刻</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-icon">💰</div>
+          <div class="stat-num">¥86万</div>
+          <div class="stat-label">一生积蓄</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-icon">🏠</div>
+          <div class="stat-num">苏州</div>
+          <div class="stat-label">最终住所</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="achievements">
+      <div class="section-title">🏆 成就达成</div>
+      <div class="achievement-list">
+        <div class="achievement-item">
+          <span class="achievement-icon">🎓</span>
+          <div class="achievement-text">
+            <div class="achievement-name">金榜题名</div>
+            <div class="achievement-desc">考入南京大学</div>
+          </div>
+        </div>
+        <div class="achievement-item">
+          <span class="achievement-icon">💼</span>
+          <div class="achievement-text">
+            <div class="achievement-name">事业有成</div>
+            <div class="achievement-desc">创办自己的设计公司</div>
+          </div>
+        </div>
+        <div class="achievement-item">
+          <span class="achievement-icon">👨‍👩‍👧</span>
+          <div class="achievement-text">
+            <div class="achievement-name">儿孙满堂</div>
+            <div class="achievement-desc">一儿一女，孙辈3人</div>
+          </div>
+        </div>
+        <div class="achievement-item">
+          <span class="achievement-icon">🏥</span>
+          <div class="achievement-text">
+            <div class="achievement-name">福寿双全</div>
+            <div class="achievement-desc">78岁安详离世</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="timeline-brief">
+      <div class="section-title">📆 人生里程碑</div>
+      <div class="milestone">
+        <div class="milestone-year">88</div>
+        <div class="milestone-content">
+          <div class="milestone-title">改革开放</div>
+          <div class="milestone-desc">18岁亲历改革开放浪潮</div>
+        </div>
+      </div>
+      <div class="milestone">
+        <div class="milestone-year">97</div>
+        <div class="milestone-content">
+          <div class="milestone-title">香港回归</div>
+          <div class="milestone-desc">见证祖国统一历史时刻</div>
+        </div>
+      </div>
+      <div class="milestone">
+        <div class="milestone-year">08</div>
+        <div class="milestone-content">
+          <div class="milestone-title">北京奥运</div>
+          <div class="milestone-desc">带家人现场观赛</div>
+        </div>
+      </div>
+      <div class="milestone">
+        <div class="milestone-year">24</div>
+        <div class="milestone-content">
+          <div class="milestone-title">寿终正寝</div>
+          <div class="milestone-desc">在苏州安详离世</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="final-stats">
+      <div class="final-quote">
+        "人的一生应当这样度过：当他回首往事时，不因虚度年华而悔恨，也不因碌碌无为而羞耻。"
+      </div>
+      <div class="final-author">—— 奥斯特洛夫斯基《钢铁是怎样炼成的》</div>
+    </div>
+
+    <div class="action-buttons">
+      <button class="btn btn-primary">🔄 再活一次</button>
+      <button class="btn btn-secondary">📤 分享人生</button>
+    </div>
+  </div>
+</body>
+</html>

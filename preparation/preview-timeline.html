@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>重活一世 - 大事记</title>
+  <style>
+    :root {
+      --primary: #8B4513;
+      --secondary: #D4A574;
+      --accent: #C41E3A;
+      --bg: #F5F0E6;
+      --text: #2C1810;
+      --card-bg: rgba(255, 255, 255, 0.95);
+      --shadow: 0 8px 32px rgba(139, 69, 19, 0.15);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", "Segoe UI", Arial, sans-serif;
+      background: var(--bg);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 400px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      animation: fadeInUp 0.4s ease-out;
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .header {
+      background: var(--card-bg);
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 24px;
+      color: var(--primary);
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .header-sub {
+      font-size: 12px;
+      color: var(--secondary);
+    }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .stat-box {
+      background: var(--bg);
+      border-radius: 12px;
+      padding: 12px 8px;
+      text-align: center;
+      transition: transform 0.2s ease;
+    }
+
+    .stat-box:hover {
+      transform: translateY(-2px);
+    }
+
+    .stat-num {
+      font-size: 20px;
+      color: var(--primary);
+      font-weight: 700;
+    }
+
+    .stat-label {
+      font-size: 10px;
+      color: var(--secondary);
+      margin-top: 4px;
+    }
+
+    .filter-bar {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 4px 0;
+    }
+
+    .filter-bar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .filter-item {
+      padding: 8px 16px;
+      background: var(--card-bg);
+      border-radius: 20px;
+      font-size: 12px;
+      color: var(--text);
+      white-space: nowrap;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .filter-item:active {
+      transform: scale(0.95);
+    }
+
+    .filter-item.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    .timeline {
+      position: relative;
+      padding-left: 24px;
+    }
+
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 8px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: linear-gradient(180deg, var(--secondary), var(--primary), var(--secondary));
+    }
+
+    .timeline-year {
+      font-size: 16px;
+      color: var(--primary);
+      margin: 20px 0 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+    }
+
+    .timeline-year::before {
+      content: '';
+      position: absolute;
+      left: 4px;
+      width: 10px;
+      height: 10px;
+      background: var(--accent);
+      border-radius: 50%;
+      border: 2px solid var(--bg);
+    }
+
+    .timeline-item {
+      background: var(--card-bg);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: 0 4px 12px rgba(139, 69, 19, 0.08);
+      position: relative;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .timeline-item:hover {
+      transform: translateX(4px);
+      box-shadow: 0 6px 16px rgba(139, 69, 19, 0.12);
+    }
+
+    .timeline-item:active {
+      transform: translateX(2px) scale(0.99);
+    }
+
+    .timeline-item::before {
+      content: '';
+      position: absolute;
+      left: -20px;
+      top: 20px;
+      width: 10px;
+      height: 10px;
+      background: var(--secondary);
+      border-radius: 50%;
+      border: 2px solid var(--bg);
+    }
+
+    .timeline-item.important::before {
+      background: var(--accent);
+      animation: starPulse 2s ease-in-out infinite;
+    }
+
+    @keyframes starPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(196, 30, 58, 0.4); }
+      50% { box-shadow: 0 0 8px 2px rgba(196, 30, 58, 0.3); }
+    }
+
+    .item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+
+    .item-date {
+      font-size: 12px;
+      color: var(--secondary);
+    }
+
+    .item-star {
+      font-size: 14px;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .item-star:active {
+      transform: scale(1.3);
+    }
+
+    .item-title {
+      font-size: 14px;
+      color: var(--text);
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .item-preview {
+      font-size: 12px;
+      color: var(--text);
+      opacity: 0.7;
+      line-height: 1.5;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .item-tags {
+      display: flex;
+      gap: 6px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+
+    .item-tag {
+      font-size: 10px;
+      padding: 3px 8px;
+      background: var(--bg);
+      border-radius: 10px;
+      color: var(--primary);
+      transition: transform 0.2s ease;
+    }
+
+    .item-tag:active {
+      transform: scale(0.9);
+    }
+
+    .item-mood {
+      font-size: 12px;
+      margin-left: auto;
+    }
+
+    .add-btn {
+      position: fixed;
+      bottom: 90px;
+      right: 20px;
+      width: 56px;
+      height: 56px;
+      background: linear-gradient(135deg, var(--accent), #DC143C);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      color: white;
+      box-shadow: 0 4px 20px rgba(196, 30, 58, 0.4);
+      cursor: pointer;
+      transition: all 0.3s;
+      border: none;
+    }
+
+    .add-btn:hover {
+      transform: scale(1.1);
+    }
+
+    .add-btn:active {
+      transform: scale(0.95);
+    }
+
+    .bottom-nav {
+      display: flex;
+      justify-content: space-around;
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 12px;
+      box-shadow: var(--shadow);
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 8px 16px;
+      cursor: pointer;
+      border-radius: 12px;
+      transition: all 0.2s;
+    }
+
+    .nav-item:hover {
+      background: rgba(139, 69, 19, 0.05);
+    }
+
+    .nav-item:active {
+      transform: scale(0.95);
+    }
+
+    .nav-item.active {
+      background: rgba(139, 69, 19, 0.1);
+    }
+
+    .nav-icon {
+      font-size: 20px;
+    }
+
+    .nav-label {
+      font-size: 10px;
+      color: var(--text);
+      opacity: 0.7;
+    }
+
+    .nav-item.active .nav-label {
+      color: var(--accent);
+      font-weight: 600;
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📝 大事记</h1>
+      <p class="header-sub">记录人生的每一个重要时刻</p>
+      
+      <div class="stats-row">
+        <div class="stat-box">
+          <div class="stat-num">47</div>
+          <div class="stat-label">总事件</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num">12</div>
+          <div class="stat-label">标记重要</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num">23</div>
+          <div class="stat-label">今年</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="filter-bar">
+      <div class="filter-item active">全部</div>
+      <div class="filter-item">重要</div>
+      <div class="filter-item">工作</div>
+      <div class="filter-item">学习</div>
+      <div class="filter-item">家庭</div>
+      <div class="filter-item">情感</div>
+    </div>
+
+    <div class="timeline">
+      <div class="timeline-year">1998年</div>
+      
+      <div class="timeline-item important">
+        <div class="item-header">
+          <span class="item-date">1998年3月12日 · 13岁</span>
+          <span class="item-star">⭐</span>
+        </div>
+        <div class="item-title">98年特大洪灾</div>
+        <div class="item-preview">
+          这场特大洪灾让整个中国都笼罩在阴霾之中。你把攒了两个月的零花钱全部捐给了灾区...
+        </div>
+        <div class="item-tags">
+          <span class="item-tag">大事件</span>
+          <span class="item-tag">捐款</span>
+          <span class="item-mood">😢</span>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="item-header">
+          <span class="item-date">1998年7月15日 · 13岁</span>
+          <span class="item-star">☆</span>
+        </div>
+        <div class="item-title">暑假打工初体验</div>
+        <div class="item-preview">
+          第一次在暑假跟着邻居大哥去城里打工，在建筑工地搬砖，一天赚了15块钱...
+        </div>
+        <div class="item-tags">
+          <span class="item-tag">工作</span>
+          <span class="item-tag">成长</span>
+          <span class="item-mood">😊</span>
+        </div>
+      </div>
+
+      <div class="timeline-year">1999年</div>
+
+      <div class="timeline-item important">
+        <div class="item-header">
+          <span class="item-date">1999年9月1日 · 14岁</span>
+          <span class="item-star">⭐</span>
+        </div>
+        <div class="item-title">考入县重点高中</div>
+        <div class="item-preview">
+          收到县一中录取通知书那天，全家人都很高兴。父亲破天荒喝了点酒，母亲宰了只鸡...
+        </div>
+        <div class="item-tags">
+          <span class="item-tag">学习</span>
+          <span class="item-tag">升学</span>
+          <span class="item-mood">🎉</span>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="item-header">
+          <span class="item-date">1999年12月20日 · 14岁</span>
+          <span class="item-star">☆</span>
+        </div>
+        <div class="item-title">澳门回归祖国</div>
+        <div class="item-preview">
+          学校组织观看澳门回归仪式，"你可知Macau不是我真名"这首歌传遍大江南北...
+        </div>
+        <div class="item-tags">
+          <span class="item-tag">大事件</span>
+          <span class="item-tag">爱国</span>
+          <span class="item-mood">😊</span>
+        </div>
+      </div>
+    </div>
+
+    <button class="add-btn">+</button>
+
+    <div class="bottom-nav">
+      <div class="nav-item">
+        <span class="nav-icon">🏠</span>
+        <span class="nav-label">主页</span>
+      </div>
+      <div class="nav-item active">
+        <span class="nav-icon">📝</span>
+        <span class="nav-label">大事记</span>
+      </div>
+      <div class="nav-item">
+        <span class="nav-icon">👤</span>
+        <span class="nav-label">角色</span>
+      </div>
+      <div class="nav-item">
+        <span class="nav-icon">⚙️</span>
+        <span class="nav-label">设置</span>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

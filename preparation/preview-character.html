@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>重活一世 - 角色生成</title>
+  <style>
+    :root {
+      --primary: #8B4513;
+      --secondary: #D4A574;
+      --accent: #C41E3A;
+      --bg: #F5F0E6;
+      --text: #2C1810;
+      --card-bg: rgba(255, 255, 255, 0.95);
+      --shadow: 0 8px 32px rgba(139, 69, 19, 0.2);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", "Segoe UI", Arial, sans-serif;
+      background: var(--bg);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 400px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      animation: fadeInUp 0.4s ease-out;
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 8px;
+    }
+
+    .header h1 {
+      font-size: 24px;
+      color: var(--primary);
+      font-weight: 700;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 4px;
+      background: rgba(139, 69, 19, 0.1);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      width: 50%;
+      transition: width 0.3s ease;
+    }
+
+    .dice-animation {
+      text-align: center;
+      padding: 20px;
+    }
+
+    .dice {
+      font-size: 64px;
+      animation: roll 0.5s ease-in-out infinite;
+    }
+
+    @keyframes roll {
+      0%, 100% { transform: rotate(-5deg); }
+      50% { transform: rotate(5deg); }
+    }
+
+    .dice-text {
+      font-size: 14px;
+      color: var(--secondary);
+      margin-top: 12px;
+    }
+
+    .character-card {
+      background: var(--card-bg);
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .character-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 5px;
+      background: linear-gradient(90deg, var(--accent), #E6A23C, var(--accent));
+    }
+
+    .character-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px dashed rgba(139, 69, 19, 0.15);
+    }
+
+    .avatar {
+      width: 72px;
+      height: 72px;
+      background: linear-gradient(135deg, var(--secondary), #E8C9A8);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      box-shadow: 0 4px 12px rgba(139, 69, 19, 0.2);
+      transition: transform 0.3s ease;
+    }
+
+    .avatar:hover {
+      transform: scale(1.05) rotate(5deg);
+    }
+
+    .character-info h2 {
+      font-size: 20px;
+      color: var(--primary);
+      margin-bottom: 4px;
+    }
+
+    .character-info .role {
+      font-size: 13px;
+      color: var(--accent);
+      background: rgba(196, 30, 58, 0.1);
+      padding: 3px 10px;
+      border-radius: 12px;
+      display: inline-block;
+    }
+
+    .attribute-group {
+      margin-bottom: 16px;
+    }
+
+    .attribute-label {
+      font-size: 11px;
+      color: var(--secondary);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .attribute-value {
+      font-size: 14px;
+      color: var(--text);
+      padding: 10px 14px;
+      background: var(--bg);
+      border-radius: 10px;
+      border-left: 3px solid var(--secondary);
+    }
+
+    .talent-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .talent-item {
+      background: linear-gradient(135deg, #FFF9F0, #FFF5E6);
+      border-radius: 10px;
+      padding: 12px 8px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--text);
+      border: 1px solid rgba(139, 69, 19, 0.1);
+      transition: all 0.2s ease;
+    }
+
+    .talent-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(139, 69, 19, 0.15);
+    }
+
+    .talent-item:nth-child(1) { animation: fadeIn 0.3s ease 0.2s both; }
+    .talent-item:nth-child(2) { animation: fadeIn 0.3s ease 0.3s both; }
+    .talent-item:nth-child(3) { animation: fadeIn 0.3s ease 0.4s both; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .reroll-btn {
+      width: 100%;
+      padding: 12px;
+      background: transparent;
+      border: 2px dashed var(--secondary);
+      border-radius: 12px;
+      font-size: 14px;
+      color: var(--secondary);
+      cursor: pointer;
+      margin-top: 16px;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+
+    .reroll-btn:hover {
+      background: var(--secondary);
+      color: white;
+      border-style: solid;
+    }
+
+    .reroll-btn:active {
+      transform: scale(0.98);
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 14px 20px;
+      font-size: 15px;
+      border-radius: 25px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .btn:active {
+      transform: scale(0.96);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), #DC143C);
+      color: white;
+      border: none;
+      box-shadow: 0 4px 15px rgba(196, 30, 58, 0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(196, 30, 58, 0.4);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--primary);
+      border: 2px solid var(--primary);
+    }
+
+    .btn-secondary:hover {
+      background: var(--primary);
+      color: white;
+    }
+
+    .birth-info {
+      background: linear-gradient(135deg, #FFF9F0, #FFE8D6);
+      border-radius: 12px;
+      padding: 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border: 1px solid rgba(139, 69, 19, 0.1);
+    }
+
+    .birth-icon {
+      font-size: 28px;
+    }
+
+    .birth-details {
+      flex: 1;
+    }
+
+    .birth-date {
+      font-size: 14px;
+      color: var(--primary);
+      font-weight: 700;
+    }
+
+    .birth-place {
+      font-size: 12px;
+      color: var(--text);
+      opacity: 0.7;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>命运roll点</h1>
+    </div>
+
+    <div class="progress-bar">
+      <div class="progress-fill" style="width: 50%"></div>
+    </div>
+
+    <div class="character-card">
+      <div class="character-header">
+        <div class="avatar">👨‍🎓</div>
+        <div class="character-info">
+          <h2>李建国</h2>
+          <span class="role">初中生</span>
+        </div>
+      </div>
+
+      <div class="birth-info">
+        <span class="birth-icon">📅</span>
+        <div class="birth-details">
+          <div class="birth-date">1985年6月15日</div>
+          <div class="birth-place">江苏省苏州市平江区</div>
+        </div>
+      </div>
+
+      <div class="attribute-group">
+        <div class="attribute-label">🎭 性格</div>
+        <div class="attribute-value">内向而稳重，内心有着自己的想法</div>
+      </div>
+
+      <div class="attribute-group">
+        <div class="attribute-label">🏠 家庭背景</div>
+        <div class="attribute-value">城市普通家庭 · 父亲是工厂工人 · 母亲在纺织厂上班</div>
+      </div>
+
+      <div class="attribute-group">
+        <div class="attribute-label">✨ 天赋特长</div>
+        <div class="talent-grid">
+          <div class="talent-item">📚 记忆力强</div>
+          <div class="talent-item">🎨 绘画天赋</div>
+          <div class="talent-item">🏃 运动细胞</div>
+        </div>
+      </div>
+
+      <button class="reroll-btn">🎲 重新roll一个身份</button>
+    </div>
+
+    <div class="action-buttons">
+      <button class="btn btn-secondary">上一步</button>
+      <button class="btn btn-primary">开始人生 →</button>
+    </div>
+  </div>
+</body>
+</html>
