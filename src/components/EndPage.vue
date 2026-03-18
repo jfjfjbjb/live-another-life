@@ -74,87 +74,166 @@
     </div>
 
     <div class="action-buttons">
-      <button class="btn btn-primary" @click="$emit('set-page', 'StartPage')">🔄 再活一次</button>
+      <button class="btn btn-primary" @click="restartGame">🔄 再活一次</button>
       <button class="btn btn-secondary">📤 分享人生</button>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 
-const name = ref('李建国')
-const avatar = ref('👴')
-const birthDate = ref('1985.06.15')
-const deathDate = ref('2024.03.17')
-const age = ref(78)
-
-const stats = ref({
-  events: 1247,
-  important: 38,
-  wealth: 860000,
-  location: '苏州'
+const props = defineProps({
+  gameState: {
+    type: Object,
+    default: () => ({})
+  }
 })
 
-const achievements = ref([
-  {
-    id: 1,
-    icon: '🎓',
-    name: '金榜题名',
-    description: '考入南京大学'
-  },
-  {
-    id: 2,
-    icon: '💼',
-    name: '事业有成',
-    description: '创办自己的设计公司'
-  },
-  {
-    id: 3,
-    icon: '👨‍👩‍👧',
-    name: '儿孙满堂',
-    description: '一儿一女，孙辈3人'
-  },
-  {
-    id: 4,
-    icon: '🏥',
-    name: '福寿双全',
-    description: '78岁安详离世'
-  }
-])
+const emit = defineEmits(['set-page', 'update:game-state'])
 
-const milestones = ref([
-  {
-    id: 1,
-    year: '88',
-    title: '改革开放',
-    description: '18岁亲历改革开放浪潮'
-  },
-  {
-    id: 2,
-    year: '97',
-    title: '香港回归',
-    description: '见证祖国统一历史时刻'
-  },
-  {
-    id: 3,
-    year: '08',
-    title: '北京奥运',
-    description: '带家人现场观赛'
-  },
-  {
-    id: 4,
-    year: '24',
-    title: '寿终正寝',
-    description: '在苏州安详离世'
+// 从gameState获取真实数据
+const name = computed(() => props.gameState.character?.name || '无名氏')
+const avatar = computed(() => {
+  // 根据年龄选择头像
+  const age = props.gameState.age || 0
+  if (age < 18) return '👶'
+  if (age < 30) return '👦'
+  if (age < 50) return '👨'
+  if (age < 70) return '👨‍🦳'
+  return '👴'
+})
+
+const birthDate = computed(() => {
+  const birth = props.gameState.character?.birthDate || '1985年 6月 15日'
+  return birth.replace(/[年月]/g, '.').replace(/[日]/g, '')
+})
+
+const deathDate = computed(() => {
+  const death = props.gameState.currentDate || '2024年 3月 17日'
+  return death.replace(/[年月]/g, '.').replace(/[日]/g, '')
+})
+
+const age = computed(() => props.gameState.age || 0)
+
+const stats = computed(() => {
+  const events = props.gameState.events || []
+  const bigEvents = events.filter(event => event.bigEvent)
+  return {
+    events: events.length,
+    important: bigEvents.length,
+    wealth: props.gameState.stats?.wealth || 0,
+    location: props.gameState.character?.birthPlace?.split('·').pop().trim() || '苏州'
   }
-])
+})
+
+const achievements = computed(() => {
+  const events = props.gameState.events || []
+  const achievements = []
+  
+  // 教育成就
+  const hasEducation = events.some(event => 
+    event.tags?.includes('学习') || event.education
+  )
+  if (hasEducation) {
+    achievements.push({
+      id: 1,
+      icon: '🎓',
+      name: '学有所成',
+      description: '完成了学业教育'
+    })
+  }
+  
+  // 工作成就
+  const hasWork = events.some(event => 
+    event.tags?.includes('工作') || event.tags?.includes('事业')
+  )
+  if (hasWork) {
+    achievements.push({
+      id: 2,
+      icon: '💼',
+      name: '事业有成',
+      description: '拥有了自己的职业生涯'
+    })
+  }
+  
+  // 家庭成就
+  const hasFamily = events.some(event => 
+    event.tags?.includes('家庭') || event.bigEvent?.title === '结婚'
+  )
+  if (hasFamily) {
+    achievements.push({
+      id: 3,
+      icon: '👨‍👩‍👧',
+      name: '家庭美满',
+      description: '建立了幸福的家庭'
+    })
+  }
+  
+  // 长寿成就
+  if (age.value >= 70) {
+    achievements.push({
+      id: 4,
+      icon: '🏥',
+      name: '福寿双全',
+      description: `享年${age.value}岁，寿终正寝`
+    })
+  }
+  
+  return achievements
+})
+
+const milestones = computed(() => {
+  const events = props.gameState.events || []
+  const bigEvents = events.filter(event => event.bigEvent)
+  
+  return bigEvents.slice(-4).map((event, index) => ({
+    id: event.id,
+    year: event.date?.match(/(\d+)年/)?.[1] || '',
+    title: event.bigEvent.title,
+    description: event.bigEvent.description
+  }))
+})
 
 const quote = ref('人的一生应当这样度过：当他回首往事时，不因虚度年华而悔恨，也不因碌碌无为而羞耻。')
 const quoteAuthor = ref('奥斯特洛夫斯基《钢铁是怎样炼成的》')
 
+// 记录人生到历史
+const recordLife = () => {
+  const lifeRecord = {
+    id: Date.now(),
+    birthDate: props.gameState.character?.birthDate || '1985年 6月 15日',
+    deathDate: props.gameState.currentDate || '2024年 3月 17日',
+    age: age.value,
+    events: props.gameState.events || [],
+    finalStats: props.gameState.stats,
+    timestamp: new Date().toISOString()
+  }
+  
+  // 获取现有历史记录
+  const historicalLives = JSON.parse(localStorage.getItem('historicalLives') || '[]')
+  
+  // 添加到历史记录
+  historicalLives.unshift(lifeRecord)
+  
+  // 只保留最近5个记录
+  if (historicalLives.length > 5) {
+    historicalLives.splice(5)
+  }
+  
+  // 保存到本地存储
+  localStorage.setItem('historicalLives', JSON.stringify(historicalLives))
+}
+
+// 重新开始游戏
+const restartGame = () => {
+  // 清除游戏状态
+  emit('update:game-state', { clearGame: true })
+}
+
 onMounted(() => {
-  // 初始化数据
+  // 记录到历史
+  recordLife()
 })
 </script>
 

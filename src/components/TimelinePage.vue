@@ -1,7 +1,11 @@
 <template>
   <div class="container">
     <div class="header">
-      <h1>📝 大事记</h1>
+      <div class="header-top">
+        <button class="back-btn" @click="$emit('set-page', 'LifePage')"><</button>
+        <h1>📝 大事记</h1>
+        <div class="header-placeholder"></div>
+      </div>
       <p class="header-sub">记录人生的每一个重要时刻</p>
       
       <div class="stats-row">
@@ -20,189 +24,132 @@
       </div>
     </div>
 
-    <div class="filter-bar">
-      <div 
-        v-for="filter in filters" 
-        :key="filter"
-        class="filter-item"
-        :class="{ active: activeFilter === filter }"
-        @click="activeFilter = filter"
-      >{{ filter }}</div>
-    </div>
-
     <div class="timeline">
-      <div v-for="year in years" :key="year" class="timeline-year">
-        {{ year }}年
-        <div 
-          v-for="event in events[year]" 
-          :key="event.id"
-          class="timeline-item"
-          :class="{ important: event.important }"
-        >
-          <div class="item-header">
-            <span class="item-date">{{ event.date }} · {{ event.age }}岁</span>
-            <span class="item-star" @click="toggleImportant(event.id)">{{ event.important ? '⭐' : '☆' }}</span>
-          </div>
-          <div class="item-title">{{ event.title }}</div>
-          <div class="item-preview">{{ event.content }}</div>
-          <div class="item-tags">
+      <div 
+        v-for="event in allEvents" 
+        :key="event.id"
+        class="timeline-item"
+        :class="{ important: event.important }"
+        @click="showEventDetail(event)"
+      >
+        <div class="item-header">
+          <span class="item-date">{{ event.date }} · {{ event.age }}岁</span>
+          <span class="item-star" @click.stop="toggleImportant(event.id)">{{ event.important ? '⭐' : '☆' }}</span>
+        </div>
+        <div class="item-title">{{ event.bigEvent ? '大事件：' + event.bigEvent.title : event.title }}</div>
+        <div class="item-preview">{{ event.bigEvent ? event.bigEvent.description : event.content }}</div>
+        <div class="item-tags">
+          <span 
+            v-for="tag in event.tags" 
+            :key="tag"
+            class="item-tag"
+          >{{ tag }}</span>
+          <span class="item-mood">{{ event.mood }}</span>
+        </div>
+      </div>
+      <div v-if="allEvents.length === 0" class="no-events">
+        暂无大事记
+      </div>
+    </div>
+
+    <!-- 大事件详情弹窗 -->
+    <div v-if="selectedEvent" class="event-detail-modal" @click="closeEventDetail">
+      <div class="event-detail-content" @click.stop>
+        <div class="event-detail-header">
+          <h2>{{ selectedEvent.bigEvent ? '大事件：' + selectedEvent.bigEvent.title : selectedEvent.title }}</h2>
+          <button class="close-btn" @click="closeEventDetail">×</button>
+        </div>
+        <div class="event-detail-meta">
+          <span>{{ selectedEvent.date }}</span>
+          <span>{{ selectedEvent.age }}岁</span>
+        </div>
+        <div class="event-detail-description">
+          {{ selectedEvent.bigEvent ? selectedEvent.bigEvent.description : selectedEvent.content }}
+        </div>
+        <div class="event-detail-footer">
+          <div class="event-detail-tags">
             <span 
-              v-for="tag in event.tags" 
+              v-for="tag in selectedEvent.tags" 
               :key="tag"
-              class="item-tag"
+              class="detail-tag"
             >{{ tag }}</span>
-            <span class="item-mood">{{ event.mood }}</span>
           </div>
+          <div class="event-detail-mood">{{ selectedEvent.mood }}</div>
         </div>
       </div>
     </div>
 
-    <button class="add-btn" @click="showAddModal = true">+</button>
-
-    <div class="bottom-nav">
-      <div class="nav-item" @click="$emit('set-page', 'LifePage')">
-        <span class="nav-icon">🏠</span>
-        <span class="nav-label">主页</span>
-      </div>
-      <div class="nav-item active">
-        <span class="nav-icon">📝</span>
-        <span class="nav-label">大事记</span>
-      </div>
-      <div class="nav-item">
-        <span class="nav-icon">👤</span>
-        <span class="nav-label">角色</span>
-      </div>
-      <div class="nav-item">
-        <span class="nav-icon">⚙️</span>
-        <span class="nav-label">设置</span>
-      </div>
-    </div>
-
-    <!-- 添加事件模态框 -->
-    <div v-if="showAddModal" class="modal-overlay" @click="showAddModal = false">
-      <div class="modal-content" @click.stop>
-        <h3>添加大事记</h3>
-        <div class="form-group">
-          <label>标题</label>
-          <input type="text" v-model="newEvent.title" placeholder="请输入事件标题">
-        </div>
-        <div class="form-group">
-          <label>内容</label>
-          <textarea v-model="newEvent.content" placeholder="请输入事件内容" rows="4"></textarea>
-        </div>
-        <div class="form-group">
-          <label>标签</label>
-          <input type="text" v-model="newEvent.tagsInput" placeholder="请输入标签，用逗号分隔">
-        </div>
-        <div class="form-group">
-          <label>心情</label>
-          <select v-model="newEvent.mood">
-            <option value="😊">😊 开心</option>
-            <option value="😢">😢 难过</option>
-            <option value="😐">😐 平静</option>
-            <option value="😮">😮 惊讶</option>
-            <option value="😠">😠 愤怒</option>
-            <option value="😰">😰 焦虑</option>
-          </select>
-        </div>
-        <div class="form-actions">
-          <button class="btn btn-secondary" @click="showAddModal = false">取消</button>
-          <button class="btn btn-primary" @click="addEvent">添加</button>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 
-const activeFilter = ref('全部')
-const filters = ['全部', '重要', '工作', '学习', '家庭', '情感']
-const showAddModal = ref(false)
+const props = defineProps({
+  gameState: {
+    type: Object,
+    default: () => ({})
+  }
+})
 
+const emit = defineEmits(['set-page'])
+
+// 从gameState中获取事件数据
+const allEvents = ref([])
 const stats = ref({
-  totalEvents: 47,
-  importantEvents: 12,
-  thisYearEvents: 23
+  totalEvents: 0,
+  importantEvents: 0,
+  thisYearEvents: 0
 })
-
-const years = [1998, 1999]
-
-const events = ref({
-  1998: [
-    {
-      id: 1,
-      date: '1998年3月12日',
-      age: 13,
-      title: '98年特大洪灾',
-      content: '这场特大洪灾让整个中国都笼罩在阴霾之中。你把攒了两个月的零花钱全部捐给了灾区...',
-      tags: ['大事件', '捐款'],
-      mood: '😢',
-      important: true
-    },
-    {
-      id: 2,
-      date: '1998年7月15日',
-      age: 13,
-      title: '暑假打工初体验',
-      content: '第一次在暑假跟着邻居大哥去城里打工，在建筑工地搬砖，一天赚了15块钱...',
-      tags: ['工作', '成长'],
-      mood: '😊',
-      important: false
-    }
-  ],
-  1999: [
-    {
-      id: 3,
-      date: '1999年9月1日',
-      age: 14,
-      title: '考入县重点高中',
-      content: '收到县一中录取通知书那天，全家人都很高兴。父亲破天荒喝了点酒，母亲宰了只鸡...',
-      tags: ['学习', '升学'],
-      mood: '🎉',
-      important: true
-    },
-    {
-      id: 4,
-      date: '1999年12月20日',
-      age: 14,
-      title: '澳门回归祖国',
-      content: '学校组织观看澳门回归仪式，"你可知Macau不是我真名"这首歌传遍大江南北...',
-      tags: ['大事件', '爱国'],
-      mood: '😊',
-      important: false
-    }
-  ]
-})
-
-const newEvent = ref({
-  title: '',
-  content: '',
-  tagsInput: '',
-  mood: '😊'
-})
+const selectedEvent = ref(null)
 
 const toggleImportant = (eventId) => {
   // 实现标记重要功能
   console.log('Toggle important', eventId)
 }
 
-const addEvent = () => {
-  // 实现添加事件功能
-  console.log('Add event', newEvent.value)
-  showAddModal.value = false
-  // 重置表单
-  newEvent.value = {
-    title: '',
-    content: '',
-    tagsInput: '',
-    mood: '😊'
-  }
+const showEventDetail = (event) => {
+  selectedEvent.value = event
+}
+
+const closeEventDetail = () => {
+  selectedEvent.value = null
 }
 
 onMounted(() => {
-  // 初始化数据
+  // 从gameState中获取事件数据
+  const gameEvents = props.gameState.events || []
+  
+  let totalEvents = 0
+  let importantEvents = 0
+  let thisYearEvents = 0
+  
+  gameEvents.forEach(event => {
+    totalEvents++
+    if (event.important || event.bigEvent) {
+      importantEvents++
+      
+      // 检查是否是今年的事件（简单实现，实际应该根据当前游戏日期判断）
+      const yearMatch = event.date.match(/(\d+)年/)
+      if (yearMatch) {
+        const year = yearMatch[1]
+        if (year === new Date().getFullYear().toString()) {
+          thisYearEvents++
+        }
+      }
+    }
+  })
+  
+  // 更新数据 - 只显示大事件
+  allEvents.value = gameEvents.filter(event => event.bigEvent).sort((a, b) => {
+    // 按日期降序排序
+    return new Date(b.date.replace(/年|月|日/g, '-')) - new Date(a.date.replace(/年|月|日/g, '-'))
+  })
+  stats.value = {
+    totalEvents,
+    importantEvents,
+    thisYearEvents
+  }
 })
 </script>
 
@@ -229,11 +176,38 @@ onMounted(() => {
   text-align: center;
 }
 
+.header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.back-btn {
+  padding: 6px 12px;
+  background: linear-gradient(135deg, var(--secondary), #E8C9A8);
+  color: var(--primary);
+  border: none;
+  border-radius: 12px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.back-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(139, 69, 19, 0.2);
+}
+
+.header-placeholder {
+  width: 100px;
+}
+
 .header h1 {
-  font-size: 24px;
+  font-size: 20px;
   color: var(--primary);
   font-weight: 700;
-  margin-bottom: 8px;
+  margin: 0;
 }
 
 .header-sub {
@@ -345,11 +319,21 @@ onMounted(() => {
   background: var(--card-bg);
   border-radius: 14px;
   padding: 16px;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
   box-shadow: 0 4px 12px rgba(139, 69, 19, 0.08);
   position: relative;
   cursor: pointer;
   transition: all 0.2s;
+}
+
+.container {
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  animation: fadeInUp 0.4s ease-out;
 }
 
 .timeline-item:hover {
@@ -448,84 +432,8 @@ onMounted(() => {
   margin-left: auto;
 }
 
-.add-btn {
-  position: fixed;
-  bottom: 90px;
-  right: 20px;
-  width: 56px;
-  height: 56px;
-  background: linear-gradient(135deg, var(--accent), #DC143C);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 28px;
-  color: white;
-  box-shadow: 0 4px 20px rgba(196, 30, 58, 0.4);
-  cursor: pointer;
-  transition: all 0.3s;
-  border: none;
-  z-index: 100;
-}
-
-.add-btn:hover {
-  transform: scale(1.1);
-}
-
-.add-btn:active {
-  transform: scale(0.95);
-}
-
-.bottom-nav {
-  display: flex;
-  justify-content: space-around;
-  background: var(--card-bg);
-  border-radius: 16px;
-  padding: 12px;
-  box-shadow: var(--shadow);
-}
-
-.nav-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 8px 16px;
-  cursor: pointer;
-  border-radius: 12px;
-  transition: all 0.2s;
-}
-
-.nav-item:hover {
-  background: rgba(139, 69, 19, 0.05);
-}
-
-.nav-item:active {
-  transform: scale(0.95);
-}
-
-.nav-item.active {
-  background: rgba(139, 69, 19, 0.1);
-}
-
-.nav-icon {
-  font-size: 20px;
-}
-
-.nav-label {
-  font-size: 10px;
-  color: var(--text);
-  opacity: 0.7;
-}
-
-.nav-item.active .nav-label {
-  color: var(--accent);
-  font-weight: 600;
-  opacity: 1;
-}
-
-/* 模态框样式 */
-.modal-overlay {
+/* 大事件详情弹窗样式 */
+.event-detail-modal {
   position: fixed;
   top: 0;
   left: 0;
@@ -536,92 +444,109 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  animation: fadeIn 0.3s ease;
 }
 
-.modal-content {
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.event-detail-content {
   background: var(--card-bg);
   border-radius: 20px;
   padding: 24px;
-  width: 85%;
-  max-width: 360px;
-  box-shadow: var(--shadow);
-  animation: fadeIn 0.3s ease-out;
+  max-width: 90%;
+  width: 360px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  animation: slideIn 0.3s ease;
 }
 
-.modal-content h3 {
+@keyframes slideIn {
+  from { transform: translateY(-20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.event-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px dashed rgba(139, 69, 19, 0.15);
+}
+
+.event-detail-header h2 {
   font-size: 18px;
   color: var(--primary);
-  text-align: center;
-  margin-bottom: 20px;
-}
-
-.form-group {
-  margin-bottom: 16px;
-}
-
-.form-group label {
-  display: block;
-  font-size: 13px;
-  color: var(--secondary);
-  margin-bottom: 6px;
-}
-
-.form-group input,
-.form-group textarea,
-.form-group select {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid var(--secondary);
-  border-radius: 10px;
-  background: var(--bg);
-  font-size: 14px;
-  color: var(--text);
-  font-family: inherit;
-}
-
-.form-group textarea {
-  resize: vertical;
-}
-
-.form-actions {
-  display: flex;
-  gap: 12px;
-  margin-top: 20px;
-}
-
-.btn {
+  font-weight: 700;
+  margin: 0;
   flex: 1;
-  padding: 12px 16px;
-  font-size: 14px;
-  border-radius: 25px;
-  cursor: pointer;
-  transition: all 0.3s ease;
 }
 
-.btn:active {
-  transform: scale(0.96);
-}
-
-.btn-primary {
-  background: linear-gradient(135deg, var(--accent), #DC143C);
-  color: white;
+.close-btn {
+  background: none;
   border: none;
-  box-shadow: 0 4px 15px rgba(196, 30, 58, 0.3);
+  font-size: 24px;
+  color: var(--secondary);
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
 }
 
-.btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(196, 30, 58, 0.4);
-}
-
-.btn-secondary {
-  background: transparent;
+.close-btn:hover {
+  background: var(--bg);
   color: var(--primary);
-  border: 2px solid var(--primary);
 }
 
-.btn-secondary:hover {
-  background: var(--primary);
-  color: white;
+.event-detail-meta {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+  font-size: 12px;
+  color: var(--secondary);
 }
+
+.event-detail-description {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text);
+  margin-bottom: 20px;
+  white-space: pre-wrap;
+}
+
+.event-detail-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 16px;
+  border-top: 1px dashed rgba(139, 69, 19, 0.15);
+}
+
+.event-detail-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.detail-tag {
+  font-size: 10px;
+  padding: 3px 8px;
+  background: var(--bg);
+  border-radius: 10px;
+  color: var(--primary);
+}
+
+.event-detail-mood {
+  font-size: 16px;
+}
+
 </style>

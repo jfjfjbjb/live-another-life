@@ -25,6 +25,11 @@
         </div>
       </div>
 
+      <div class="age-info">
+        <div class="age-label">当前年龄</div>
+        <div class="age-value">{{ character.age }}岁</div>
+      </div>
+
       <div class="attribute-group">
         <div class="attribute-label">🎭 性格</div>
         <div class="attribute-value">{{ character.personality }}</div>
@@ -49,20 +54,30 @@
 
     <div class="action-buttons">
       <button class="btn btn-secondary" @click="$emit('prev-page')">上一步</button>
-      <button class="btn btn-primary" @click="$emit('next-page')">开始人生 →</button>
+      <button class="btn btn-primary" @click="startLife">开始人生</button>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
+
+const props = defineProps({
+  gameState: {
+    type: Object,
+    default: () => ({})
+  }
+})
+
+const emit = defineEmits(['update:game-state', 'next-page', 'prev-page'])
 
 const character = ref({
-  name: '李建国',
-  avatar: '👨‍🎓',
-  role: '初中生',
-  birthDate: '1985年6月15日',
-  birthPlace: '江苏省苏州市平江区',
+  name: props.gameState.userName || '李建国',
+  avatar: '👶',
+  role: '婴儿',
+  birthDate: props.gameState.birthDate || '1985年6月15日',
+  birthPlace: props.gameState.birthPlace || '江苏省苏州市平江区',
+  age: 0,
   personality: '内向而稳重，内心有着自己的想法',
   familyBackground: '城市普通家庭 · 父亲是工厂工人 · 母亲在纺织厂上班',
   talents: ['📚 记忆力强', '🎨 绘画天赋', '🏃 运动细胞']
@@ -160,17 +175,53 @@ const generateTalents = () => {
   return shuffled.slice(0, 3)
 }
 
+const generateRoleByAge = (age) => {
+  if (age < 3) return '婴儿'
+  if (age < 7) return '幼儿'
+  if (age < 13) return '小学生'
+  if (age < 16) return '初中生'
+  if (age < 19) return '高中生'
+  if (age < 23) return '大学生'
+  if (age < 60) return randomElement(roles)
+  return '退休人员'
+}
+
+const generateAvatarByAge = (age) => {
+  if (age < 3) return '👶'
+  if (age < 7) return '🧒'
+  if (age < 18) return '👦'
+  if (age < 60) return '👨'
+  return '👴'
+}
+
 const rerollCharacter = () => {
+  const age = character.value.age
   character.value = {
-    name: generateName(),
-    avatar: generateAvatar(),
-    role: randomElement(roles),
-    birthDate: '1985年6月15日', // 这里应该从BirthPage传递过来
-    birthPlace: generateBirthPlace(),
+    name: props.gameState.userName || generateName(),
+    avatar: generateAvatarByAge(age),
+    role: generateRoleByAge(age),
+    birthDate: props.gameState.birthDate || '1985年6月15日',
+    birthPlace: props.gameState.birthPlace || generateBirthPlace(),
+    age: age,
     personality: randomElement(personalities),
     familyBackground: randomElement(familyBackgrounds),
     talents: generateTalents()
   }
+}
+
+const startLife = () => {
+  emit('update:game-state', {
+    character: character.value,
+    currentDate: character.value.birthDate,
+    age: character.value.age,
+    stats: {
+      health: 100,
+      wealth: 0,
+      education: ''
+    },
+    isGameStarted: true
+  })
+  emit('next-page')
 }
 
 onMounted(() => {
@@ -428,5 +479,25 @@ onMounted(() => {
   font-size: 12px;
   color: var(--text);
   opacity: 0.7;
+}
+
+.age-info {
+  background: linear-gradient(135deg, #FFF9F0, #FFE8D6);
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 16px;
+  border: 1px solid rgba(139, 69, 19, 0.1);
+}
+
+.age-label {
+  font-size: 12px;
+  color: var(--secondary);
+  margin-bottom: 4px;
+}
+
+.age-value {
+  font-size: 20px;
+  color: var(--primary);
+  font-weight: 700;
 }
 </style>

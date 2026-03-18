@@ -23,6 +23,16 @@
         <div class="date-label">{{ weekday }} · {{ lunarDate }}</div>
       </div>
 
+      <div class="form-group">
+        <label class="form-label">姓名</label>
+        <input type="text" v-model="userName" class="form-input" placeholder="请输入您的姓名">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">出生地</label>
+        <input type="text" v-model="birthPlace" class="form-input" placeholder="请输入您的出生地">
+      </div>
+
       <div class="selector-group">
         <div class="selector-item">
           <div class="selector-label">年份</div>
@@ -84,7 +94,7 @@
 
       <div class="action-buttons">
         <button class="btn btn-secondary" @click="$emit('prev-page')">上一步</button>
-        <button class="btn btn-primary" @click="$emit('next-page')">确认出生</button>
+        <button class="btn btn-primary" @click="confirmBirth">确认出生</button>
       </div>
     </div>
   </div>
@@ -93,9 +103,20 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 
+const props = defineProps({
+  gameState: {
+    type: Object,
+    default: () => ({})
+  }
+})
+
+const emit = defineEmits(['update:game-state', 'next-page', 'prev-page'])
+
 const selectedYear = ref(1985)
 const selectedMonth = ref(6)
 const selectedDay = ref(15)
+const userName = ref(props.gameState.userName || '')
+const birthPlace = ref(props.gameState.birthPlace || '')
 
 const years = Array.from({ length: 76 }, (_, i) => 1949 + i)
 const months = Array.from({ length: 12 }, (_, i) => i + 1)
@@ -146,6 +167,16 @@ const updateHistoryEvent = () => {
   // 这里可以根据选择的日期加载对应的历史事件
   // 目前使用模拟数据
   historyEvent.value = `${selectedYear.value}年${selectedMonth.value}月${selectedDay.value}日，这一天发生了很多重要的历史事件...`
+}
+
+const confirmBirth = () => {
+  const birthDate = `${selectedYear.value}年${selectedMonth.value}月${selectedDay.value}日`
+  emit('update:game-state', {
+    userName: userName.value,
+    birthDate: birthDate,
+    birthPlace: birthPlace.value
+  })
+  emit('next-page')
 }
 
 onMounted(() => {
@@ -440,5 +471,41 @@ watch(selectedDay, () => {
 
 .step-dot.completed {
   background: var(--primary);
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-label {
+  display: block;
+  font-size: 12px;
+  color: var(--secondary);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.form-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid var(--secondary);
+  border-radius: 12px;
+  background: var(--bg);
+  font-size: 14px;
+  color: var(--text);
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(139, 69, 19, 0.1);
+}
+
+.form-input::placeholder {
+  color: var(--secondary);
+  opacity: 0.7;
 }
 </style>

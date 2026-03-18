@@ -5,7 +5,7 @@
         <div class="date-main">{{ currentDate }}</div>
         <div class="date-sub">{{ weekday }} · {{ lunarDate }}</div>
       </div>
-      <div class="age-badge">{{ age }}岁</div>
+      <div class="age-badge">{{ exactAge.years }}岁</div>
     </div>
 
     <div class="location-bar">
@@ -16,6 +16,7 @@
     <div class="main-card">
       <div class="weather-effect" :class="weatherType">
         <div 
+          v-if="weatherType === 'rain'"
           v-for="i in 6" 
           :key="i"
           class="rain-drop"
@@ -60,7 +61,7 @@
       <div class="stats-bar">
         <div class="stat-item">
           <div class="stat-label">健康</div>
-          <div class="stat-value">{{ stats.health }}</div>
+          <div class="stat-value">{{ stats.health.toFixed(2) }}%</div>
           <div class="health-bar">
             <div class="health-fill" :style="{ width: `${stats.health}%` }"></div>
           </div>
@@ -76,109 +77,916 @@
       </div>
     </div>
 
-    <div class="action-bar">
-      <button class="btn btn-secondary" @click="showSkipModal = true">
-        <span class="btn-icon">⏭</span>
-        跳过
-      </button>
-      <button class="btn btn-primary" @click="nextDay">
-        继续明天
-        <span class="btn-icon">→</span>
-      </button>
-    </div>
-
-    <div class="bottom-nav">
-      <div class="nav-item" @click="$emit('set-page', 'LifePage')">
-        <span class="nav-icon">🏠</span>
-        <span class="nav-label">主页</span>
+    <!-- 最近大事记 -->
+    <div class="recent-events">
+      <div class="recent-events-header">
+        <div>
+          <h3>最近大事记</h3>
+        </div>
+        <button class="view-all-btn" @click="$emit('set-page', 'TimelinePage')">更多></button>
       </div>
-      <div class="nav-item" @click="$emit('set-page', 'TimelinePage')">
-        <span class="nav-icon">📝</span>
-        <span class="nav-label">大事记</span>
-      </div>
-      <div class="nav-item">
-        <span class="nav-icon">👤</span>
-        <span class="nav-label">角色</span>
-      </div>
-      <div class="nav-item active">
-        <span class="nav-icon">⚙️</span>
-        <span class="nav-label">设置</span>
+      <div class="recent-events-list">
+        <div 
+          v-for="event in recentEvents" 
+          :key="event.id"
+          class="recent-event-item"
+        >
+          <div class="event-date">{{ event.date }}</div>
+          <div class="event-title">{{ event.title }}</div>
+        </div>
+        <div v-if="recentEvents.length === 0" class="no-events">
+          暂无大事记
+        </div>
       </div>
     </div>
 
-    <!-- 跳过模态框 -->
-    <div v-if="showSkipModal" class="modal-overlay" @click="showSkipModal = false">
+    <!-- 控制按钮 -->
+    <div class="control-buttons">
+      <button class="control-btn" @click="showSkipDialog">跳过时间</button>
+      <button class="control-btn primary" @click="skipToEnd">直接结束</button>
+    </div>
+
+    <!-- 跳过时间弹窗 -->
+    <div v-if="showSkipModal" class="modal" @click="closeSkipDialog">
       <div class="modal-content" @click.stop>
-        <h3>选择跳过时间</h3>
-        <div class="skip-options">
-          <div class="skip-group">
-            <h4>跳过天数</h4>
-            <div class="skip-buttons">
-              <button class="skip-btn" @click="skipDays(1)">1天</button>
-              <button class="skip-btn" @click="skipDays(7)">7天</button>
-              <button class="skip-btn" @click="skipDays(30)">30天</button>
-              <button class="skip-btn" @click="skipDays(365)">365天</button>
-            </div>
-          </div>
-          <div class="skip-group">
-            <h4>跳过年份</h4>
-            <div class="skip-buttons">
-              <button class="skip-btn" @click="skipYears(1)">1年</button>
-              <button class="skip-btn" @click="skipYears(5)">5年</button>
-              <button class="skip-btn" @click="skipYears(10)">10年</button>
-            </div>
+        <div class="modal-header">
+          <h3>跳过时间</h3>
+          <button class="close-btn" @click="closeSkipDialog">×</button>
+        </div>
+        <div class="modal-body">
+          <p>请选择要跳过的年数：</p>
+          <div class="skip-options">
+            <button 
+              v-for="years in [1, 5, 10, 20]" 
+              :key="years"
+              class="skip-btn"
+              @click="skipYears(years)"
+            >{{ years }}年</button>
           </div>
         </div>
-        <button class="cancel-btn" @click="showSkipModal = false">取消</button>
       </div>
     </div>
+
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { eventTypes, ageEvents } from '../data/events.js'
+import { weathers, locationWeatherMap } from '../data/weather.js'
+import { moods } from '../data/moods.js'
+import { bigEvents } from '../data/bigEvents.js'
+import { historyEvents } from '../data/historyEvents.js'
 
-const currentDate = ref('1998年 3月 12日')
-const weekday = ref('星期四')
-const lunarDate = ref('戊寅年二月十五')
-const age = ref(13)
-const location = ref('江苏省 · 苏州市 · 平江区')
-const weather = ref('小雨')
-const weatherType = ref('rain')
-const weatherIcon = ref('🌧️')
-const mood = ref('难过')
-const moodIcon = ref('😢')
-const bigEvent = ref({
-  title: '98年特大洪灾',
-  description: '长江、松花江、嫩江全流域超历史最高水位'
+const props = defineProps({
+  gameState: {
+    type: Object,
+    default: () => ({})
+  }
 })
-const eventContent = ref('1998年的这场特大洪灾让整个中国都笼罩在阴霾之中。你所在的苏州虽然不是重灾区，但电视上每天都在播放抗洪救灾的新闻。学校组织你们为灾区捐款，你把攒了两个月的零花钱全部捐了出去。\n\n放学回家的路上，你看到很多外地来的灾民临时安置在火车站，他们的眼神让你感到心里堵得慌。妈妈说，今年很多庄稼都淹了，来年吃饭都成问题。你在心里暗暗发誓，要好好读书，将来做大事帮助更多的人。')
-const eventTags = ref(['上学', '捐款', '感悟'])
-const stats = ref({
-  health: 85,
-  wealth: 2450,
-  education: '初一'
+
+const emit = defineEmits(['update:game-state', 'set-page'])
+
+// 从gameState中获取数据
+const currentDate = ref(props.gameState.currentDate || '1985年 6月 15日')
+const weekday = ref('星期日')
+const lunarDate = ref('乙丑年五月廿八')
+const location = ref(props.gameState.character?.birthPlace || '江苏省 · 苏州市 · 平江区')
+const weather = ref('晴')
+
+// 计算年龄（唯一的年龄来源）
+const age = computed(() => {
+  const birthDate = parseDate(props.gameState.character?.birthDate || '1985年 6月 15日')
+  const current = parseDate(currentDate.value)
+  
+  // 计算总天数差
+  const timeDiff = current.getTime() - birthDate.getTime()
+  const totalDays = Math.floor(timeDiff / (1000 * 3600 * 24))
+  
+  // 计算年数
+  return Math.floor(totalDays / 365)
 })
+
+// 计算具体年龄（只计算年数）
+const exactAge = computed(() => {
+  return { 
+    years: age.value 
+  }
+})
+const weatherType = ref('sunny')
+const weatherIcon = ref('☀️')
+const mood = ref('开心')
+const moodIcon = ref('😊')
+const bigEvent = ref(null)
+const eventContent = ref('今天是你出生的日子，全家人都很高兴。')
+const eventTags = ref(['出生', '家庭'])
+const stats = ref(props.gameState.stats || {
+  health: 100,
+  wealth: 0,
+  education: ''
+})
+
+// 从gameState中获取最近的大事件
+const events = ref(props.gameState.events || [])
+const recentEvents = ref(
+  events.value
+    .filter(event => event.bigEvent)
+    .map(event => ({
+      id: event.id,
+      date: event.date,
+      title: `大事件：${event.bigEvent.title}`,
+      content: event.bigEvent.description
+    }))
+    .slice(-5)
+    .reverse()
+) // 只获取最近5个大事件并反转顺序
+
+// 定时器相关
+const timerInterval = ref(null)
+const realTimeDays = ref(props.gameState.realTimeDays || 0) // 现实时间的天数
+const gameTimeSpeed = ref(1) // 游戏时间速度倍率
+
+// 跳过时间相关
 const showSkipModal = ref(false)
+const accumulatedYears = ref(0) // 累积跳过的年数
+const targetAge = ref(null) // 目标年龄（跳过后的年龄）
 
+// 当前状态保存（用于页面切换后恢复）
+const currentState = ref({
+  eventContent: '',
+  eventTags: [],
+  weather: '',
+  weatherType: '',
+  weatherIcon: '',
+  mood: '',
+  moodIcon: '',
+  bigEvent: null
+})
+
+// 历史人生记录
+const historicalLives = ref(JSON.parse(localStorage.getItem('historicalLives') || '[]'))
+
+
+
+// 解析日期字符串为Date对象
+const parseDate = (dateStr) => {
+  const match = dateStr.match(/(\d+)年\s*(\d+)月\s*(\d+)日/)
+  if (match) {
+    const [, year, month, day] = match.map(Number)
+    return new Date(year, month - 1, day)
+  }
+  return new Date()
+}
+
+// 格式化Date对象为日期字符串
+const formatDate = (date) => {
+  const year = date.getFullYear()
+  const month = date.getMonth() + 1
+  const day = date.getDate()
+  return `${year}年 ${month}月 ${day}日`
+}
+
+// 获取星期几
+const getWeekday = (date) => {
+  const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六']
+  return weekdays[date.getDay()]
+}
+
+// 随机生成事件
+const generateRandomEvent = () => {
+  // 解析当前日期获取季节
+  const current = parseDate(currentDate.value)
+  const month = current.getMonth() + 1
+  let season = ''
+  if (month >= 3 && month <= 5) {
+    season = 'spring'
+  } else if (month >= 6 && month <= 8) {
+    season = 'summer'
+  } else if (month >= 9 && month <= 11) {
+    season = 'autumn'
+  } else {
+    season = 'winter'
+  }
+  
+  // 根据地区和季节生成天气
+  let weather = null
+  const locationWeatherMap = {
+    '江苏省 · 苏州市 · 平江区': {
+      spring: ['sunny', 'cloudy', 'rain'],
+      summer: ['sunny', 'rain'],
+      autumn: ['sunny', 'cloudy'],
+      winter: ['cloudy', 'rain', 'fog']
+    },
+    // 可以添加更多地区的天气配置
+    default: {
+      spring: ['sunny', 'cloudy', 'rain'],
+      summer: ['sunny', 'rain'],
+      autumn: ['sunny', 'cloudy'],
+      winter: ['cloudy', 'rain', 'snow', 'fog']
+    }
+  }
+  
+  const locationWeather = locationWeatherMap[location.value] || locationWeatherMap.default
+  const possibleWeathers = locationWeather[season]
+  const weatherType = possibleWeathers[Math.floor(Math.random() * possibleWeathers.length)]
+  weather = weathers.find(w => w.type === weatherType) || weathers[0]
+  
+  const eventType = eventTypes[Math.floor(Math.random() * eventTypes.length)]
+  const mood = moods[Math.floor(Math.random() * moods.length)]
+  
+  // 随机生成事件内容
+  let content = eventType.content
+  
+  // 根据年龄生成不同的事件
+  if (age.value < 3) {
+    content = '你还是个婴儿，每天除了吃就是睡。'
+  } else if (age.value < 7) {
+    content = '你开始上幼儿园了，认识了很多新朋友。'
+  } else if (age.value < 13) {
+    content = '你上小学了，开始学习各种知识。'
+  } else if (age.value < 16) {
+    content = '你上初中了，学习压力开始变大。'
+  } else if (age.value < 19) {
+    content = '你上高中了，为高考做准备。'
+  } else if (age.value < 23) {
+    content = '你上大学了，开始独立生活。'
+  } else if (age.value < 30) {
+    content = '你开始了职业生涯，努力在社会上站稳脚跟。'
+  } else if (age.value < 40) {
+    content = '你在职场上继续努力，为自己的事业奋斗。'
+  } else if (age.value < 50) {
+    content = '你事业有成，开始思考人生的意义。'
+  } else if (age.value < 60) {
+    content = '你继续工作，为退休后的生活做准备。'
+  } else if (age.value < 70) {
+    content = '你退休了，开始享受晚年生活。'
+  } else {
+    content = '你已是暮年，回忆过去的点点滴滴。'
+  }
+  
+  // 生成重要大事件（人生转折、意外、重要事件）
+  let bigEvent = null
+  // 重要年龄段更容易发生大事件
+  const bigEventChance = age.value < 7 ? 0.02 : 
+                        age.value < 18 ? 0.05 : 
+                        age.value < 30 ? 0.1 : 
+                        age.value < 60 ? 0.08 : 0.05
+  
+  if (Math.random() < bigEventChance) {
+    // 收集适合当前年龄的大事件
+    const availableEvents = [...bigEvents.universal]
+    
+    // 添加适合当前年龄的事件
+    Object.keys(bigEvents.byAge).forEach(ageThreshold => {
+      if (age.value >= parseInt(ageThreshold)) {
+        availableEvents.push(...bigEvents.byAge[ageThreshold])
+      }
+    })
+    
+    if (availableEvents.length > 0) {
+      bigEvent = availableEvents[Math.floor(Math.random() * availableEvents.length)]
+    }
+  }
+  
+  return {
+    content,
+    tags: eventType.tags,
+    weather,
+    mood,
+    bigEvent
+  }
+}
+
+// 推进到下一年
+const nextYear = () => {
+  // 如果有目标年龄且当前年龄小于目标年龄，快速推进
+  if (targetAge.value && age.value < targetAge.value) {
+    // 快速模式：直接跳到目标年龄，只记录关键信息
+    const maxIterations = targetAge.value - age.value // 限制最大迭代次数
+    let iterations = 0
+    while (age.value < targetAge.value && stats.value.health > 0 && age.value < 120 && iterations < maxIterations) {
+      iterations++
+      // 更新日期到下一年的生日
+      const current = parseDate(currentDate.value)
+      current.setFullYear(current.getFullYear() + 1)
+      currentDate.value = formatDate(current)
+      weekday.value = getWeekday(current)
+      
+      // 重新计算年龄
+      const birthDate = parseDate(props.gameState.character?.birthDate || '1985年 6月 15日')
+      const currentDateObj = parseDate(currentDate.value)
+      const timeDiff = currentDateObj.getTime() - birthDate.getTime()
+      const totalDays = Math.floor(timeDiff / (1000 * 3600 * 24))
+      const currentAge = Math.floor(totalDays / 365)
+      
+      // 年度健康减少（简化计算）
+      let healthDecrease = 0.5 // 基础年度减少（更缓慢）
+      if (currentAge >= 70) healthDecrease = 15 // 70岁后快速减少
+      else if (currentAge >= 60) healthDecrease = 8 // 60-69岁较快减少
+      else if (currentAge >= 45) healthDecrease = 3 // 45-59岁缓慢减少
+      else if (currentAge >= 30) healthDecrease = 1 // 30-44岁几乎不减少
+      
+      stats.value.health = Math.max(0, stats.value.health - healthDecrease)
+      
+      // 更新学历和财富（简化计算）
+      updateYearlyStats()
+      
+      // 检查是否达到游戏时间120年或死亡
+      if (currentAge >= 120 || stats.value.health <= 0) {
+        break
+      }
+    }
+    
+    // 到达目标年龄后，生成当前年份的详细事件
+    targetAge.value = null
+    accumulatedYears.value = 0
+    
+    // 如果还活着，生成当前年份的详细事件
+    if (stats.value.health > 0) {
+      const yearlyEvent = generateYearlyEvent()
+      eventContent.value = yearlyEvent.content
+      eventTags.value = yearlyEvent.tags
+      weather.value = yearlyEvent.weather.name
+      weatherType.value = yearlyEvent.weather.type
+      weatherIcon.value = yearlyEvent.weather.icon
+      mood.value = yearlyEvent.mood.name
+      moodIcon.value = yearlyEvent.mood.icon
+      bigEvent.value = yearlyEvent.bigEvent
+      
+      // 保存当前状态
+      currentState.value = {
+        eventContent: yearlyEvent.content,
+        eventTags: yearlyEvent.tags,
+        weather: yearlyEvent.weather.name,
+        weatherType: yearlyEvent.weather.type,
+        weatherIcon: yearlyEvent.weather.icon,
+        mood: yearlyEvent.mood.name,
+        moodIcon: yearlyEvent.mood.icon,
+        bigEvent: yearlyEvent.bigEvent
+      }
+      
+      // 记录当前年份事件
+      recordYearlyEvent(yearlyEvent)
+    } else {
+      // 如果已经死亡，处理死亡
+      handleDeath()
+      return
+    }
+  } else {
+    // 正常模式：详细处理每一年
+    // 年龄会自动通过computed属性计算
+    
+    // 更新日期到下一年的生日
+    const current = parseDate(currentDate.value)
+    current.setFullYear(current.getFullYear() + 1)
+    currentDate.value = formatDate(current)
+    weekday.value = getWeekday(current)
+    
+    // 生成年度总结事件
+  const yearlyEvent = generateYearlyEvent()
+  eventContent.value = yearlyEvent.content
+  eventTags.value = yearlyEvent.tags
+  weather.value = yearlyEvent.weather.name
+  weatherType.value = yearlyEvent.weather.type
+  weatherIcon.value = yearlyEvent.weather.icon
+  mood.value = yearlyEvent.mood.name
+  moodIcon.value = yearlyEvent.mood.icon
+  bigEvent.value = yearlyEvent.bigEvent
+  
+  // 保存当前状态
+  currentState.value = {
+    eventContent: yearlyEvent.content,
+    eventTags: yearlyEvent.tags,
+    weather: yearlyEvent.weather.name,
+    weatherType: yearlyEvent.weather.type,
+    weatherIcon: yearlyEvent.weather.icon,
+    mood: yearlyEvent.mood.name,
+    moodIcon: yearlyEvent.mood.icon,
+    bigEvent: yearlyEvent.bigEvent
+  }
+    
+    // 年度健康减少
+    let healthDecrease = 0.5 // 基础年度减少（更缓慢）
+    if (age.value >= 70) {
+      healthDecrease = 15 // 70岁后快速减少
+    } else if (age.value >= 60) {
+      healthDecrease = 8 // 60-69岁较快减少
+    } else if (age.value >= 45) {
+      healthDecrease = 3 // 45-59岁缓慢减少
+    } else if (age.value >= 30) {
+      healthDecrease = 1 // 30-44岁几乎不减少
+    }
+    
+    // 大事件导致额外健康减少
+    if (yearlyEvent.bigEvent) {
+      if (yearlyEvent.bigEvent.title === '意外' || yearlyEvent.bigEvent.title === '健康危机') {
+        healthDecrease += 30 + Math.random() * 20 // 意外或健康危机额外减少30-50（可能导致早死）
+      }
+    }
+    
+    // 应用健康减少
+    stats.value.health = Math.max(0, stats.value.health - healthDecrease)
+    
+    // 检查健康值是否为0（死亡）
+    if (stats.value.health <= 0) {
+      handleDeath()
+      return
+    }
+    
+    // 根据年龄更新学历和财富
+    updateYearlyStats()
+    
+    // 记录年度事件（包括大事件）
+    recordYearlyEvent(yearlyEvent)
+    
+    // 检查是否达到游戏时间120年
+    if (age.value >= 120) {
+      handleDeath()
+      return
+    }
+  }
+  
+  // 更新游戏状态
+  emit('update:game-state', {
+    currentDate: currentDate.value,
+    age: age.value,
+    stats: stats.value,
+    events: events.value,
+    realTimeDays: realTimeDays.value
+  })
+}
+
+// 生成年度事件
+const generateYearlyEvent = () => {
+  // 根据年龄生成不同的事件
+  let eventData
+  
+  if (age.value < 3) {
+    eventData = ageEvents.baby
+  } else if (age.value < 7) {
+    eventData = ageEvents.kindergarten
+  } else if (age.value < 13) {
+    eventData = ageEvents.elementary
+  } else if (age.value < 16) {
+    eventData = ageEvents.middle
+  } else if (age.value < 19) {
+    eventData = ageEvents.high
+  } else if (age.value < 23) {
+    eventData = ageEvents.college
+  } else if (age.value < 30) {
+    eventData = ageEvents.earlyCareer
+  } else if (age.value < 40) {
+    eventData = ageEvents.midCareer
+  } else if (age.value < 50) {
+    eventData = ageEvents.lateCareer
+  } else if (age.value < 60) {
+    eventData = ageEvents.preRetirement
+  } else if (age.value < 70) {
+    eventData = ageEvents.retirement
+  } else {
+    eventData = ageEvents.oldAge
+  }
+  
+  const content = eventData.content
+  const tags = eventData.tags
+  
+  // 随机生成天气和心情
+  const weather = weathers[Math.floor(Math.random() * weathers.length)]
+  const mood = moods[Math.floor(Math.random() * moods.length)]
+  
+  // 生成重要大事件（人生转折、意外、重要事件）
+  let bigEvent = null
+  // 重要年龄段更容易发生大事件
+  const bigEventChance = age.value < 7 ? 0.02 : 
+                        age.value < 18 ? 0.05 : 
+                        age.value < 30 ? 0.1 : 
+                        age.value < 60 ? 0.08 : 0.05
+  
+  if (Math.random() < bigEventChance) {
+    // 收集适合当前年龄的大事件
+    const availableEvents = [...bigEvents.universal]
+    
+    // 添加适合当前年龄的事件
+    Object.keys(bigEvents.byAge).forEach(ageThreshold => {
+      if (age.value >= parseInt(ageThreshold)) {
+        availableEvents.push(...bigEvents.byAge[ageThreshold])
+      }
+    })
+    
+    if (availableEvents.length > 0) {
+      bigEvent = availableEvents[Math.floor(Math.random() * availableEvents.length)]
+    }
+  }
+  
+  // 检查是否有历史大事
+  const currentYear = parseDate(currentDate.value).getFullYear()
+  if (historyEvents[currentYear]) {
+    const historicalEvent = historyEvents[currentYear][Math.floor(Math.random() * historyEvents[currentYear].length)]
+    // 有20%的概率触发历史大事
+    if (Math.random() < 0.2) {
+      bigEvent = historicalEvent
+    }
+  }
+  
+  return {
+    content,
+    tags,
+    weather,
+    mood,
+    bigEvent
+  }
+}
+
+// 更新年度统计数据
+const updateYearlyStats = () => {
+  // 根据年龄更新学历
+  if (age.value < 7) {
+    stats.value.education = '未上学'
+  } else if (age.value < 13) {
+    stats.value.education = '小学'
+  } else if (age.value < 16) {
+    stats.value.education = '初中'
+  } else if (age.value < 19) {
+    stats.value.education = '高中'
+  } else if (age.value < 23) {
+    stats.value.education = '大学'
+  } else {
+    stats.value.education = '大学以上'
+  }
+  
+  // 年度财富变化
+  if (age.value >= 7) {
+    // 根据年龄和职业状态调整财富
+    let yearlyChange = 0
+    if (age.value >= 23 && age.value < 60) {
+      // 工作年龄，财富增长
+      yearlyChange = Math.floor(Math.random() * 20000 + 10000) // 1-3万
+    } else if (age.value >= 60) {
+      // 退休，财富缓慢减少
+      yearlyChange = Math.floor(Math.random() * 10000 - 15000) // -1.5-1万
+    }
+    stats.value.wealth = Math.max(0, stats.value.wealth + yearlyChange)
+  }
+}
+
+// 记录年度事件
+const recordYearlyEvent = (yearlyEvent) => {
+  const newEvent = {
+    id: Date.now(),
+    date: currentDate.value,
+    age: age.value,
+    title: yearlyEvent.bigEvent ? yearlyEvent.bigEvent.title : '年度总结',
+    content: yearlyEvent.content,
+    tags: yearlyEvent.tags,
+    mood: yearlyEvent.mood.icon,
+    important: !!yearlyEvent.bigEvent,
+    bigEvent: yearlyEvent.bigEvent,
+    isYearly: true // 标记为年度事件
+  }
+  
+  // 添加到事件列表
+  events.value.push(newEvent)
+  
+  // 如果是大事件，添加到最近大事记
+  if (yearlyEvent.bigEvent) {
+    recentEvents.value.unshift({
+      id: newEvent.id,
+      date: newEvent.date,
+      title: `大事件：${yearlyEvent.bigEvent.title}`,
+      content: yearlyEvent.bigEvent.description
+    })
+    if (recentEvents.value.length > 5) {
+      recentEvents.value = recentEvents.value.slice(0, 5)
+    }
+  }
+}
+
+// 处理死亡
+const handleDeath = () => {
+  const deathEvent = {
+    id: Date.now(),
+    date: currentDate.value,
+    age: age.value,
+    title: '死亡',
+    content: '你离开了这个世界，结束了你的一生。',
+    tags: ['死亡'],
+    mood: '😢',
+    important: true,
+    bigEvent: {
+      title: '死亡',
+      description: '你离开了这个世界，结束了你的一生。'
+    },
+    isYearly: true
+  }
+  
+  // 添加死亡事件
+  events.value.push(deathEvent)
+  
+  // 添加死亡事件到最近大事记
+  recentEvents.value.unshift({
+    id: deathEvent.id,
+    date: deathEvent.date,
+    title: `大事件：死亡`,
+    content: deathEvent.content
+  })
+  
+  // 更新游戏状态
+  emit('update:game-state', {
+    currentDate: currentDate.value,
+    age: age.value,
+    stats: stats.value,
+    events: events.value,
+    realTimeDays: realTimeDays.value
+  })
+  
+  // 记录人生到历史
+  recordLife()
+  
+  // 跳转到结束页面
+  emit('set-page', 'EndPage')
+}
+
+// 推进到下一天
 const nextDay = () => {
-  // 这里应该实现日期推进逻辑
-  console.log('Next day')
+  const current = parseDate(currentDate.value)
+  current.setDate(current.getDate() + 1)
+  currentDate.value = formatDate(current)
+  weekday.value = getWeekday(current)
+  
+  // 生成随机事件
+  const event = generateRandomEvent()
+  eventContent.value = event.content
+  eventTags.value = event.tags
+  weather.value = event.weather.name
+  weatherType.value = event.weather.type
+  weatherIcon.value = event.weather.icon
+  mood.value = event.mood.name
+  moodIcon.value = event.mood.icon
+  bigEvent.value = event.bigEvent
+  
+  // 健康值只减少
+  // 根据年龄计算基础减少率（更缓慢）
+  let healthDecrease = 0.02 // 基础减少率（非常缓慢）
+  if (age.value >= 70) {
+    healthDecrease = 0.15 // 老年减少较快
+  } else if (age.value >= 50) {
+    healthDecrease = 0.08 // 中年减少稍快
+  } else if (age.value >= 30) {
+    healthDecrease = 0.05 // 青年减少缓慢
+  }
+  
+  // 大事件导致额外健康减少
+  if (bigEvent.value) {
+    if (bigEvent.value.title === '意外' || bigEvent.value.title === '健康危机') {
+      healthDecrease += 15 + Math.random() * 10 // 意外或健康危机额外减少15-25
+    }
+  }
+  
+  // 应用健康减少
+  stats.value.health = Math.max(0, stats.value.health - healthDecrease)
+  
+  // 检查健康值是否为0（死亡）
+  if (stats.value.health <= 0) {
+    const deathEvent = {
+      id: Date.now(),
+      date: currentDate.value,
+      age: age.value,
+      title: '死亡',
+      content: '你离开了这个世界，结束了你的一生。',
+      tags: ['死亡'],
+      mood: '😢',
+      important: true,
+      bigEvent: {
+        title: '死亡',
+        description: '你离开了这个世界，结束了你的一生。'
+      }
+    }
+    
+    // 添加死亡事件到大事记
+    recentEvents.value.unshift({
+      id: deathEvent.id,
+      date: deathEvent.date,
+      title: `大事件：死亡`,
+      content: deathEvent.content
+    })
+    
+    // 更新游戏状态
+    const updatedEvents = [...(props.gameState.events || []), deathEvent]
+    
+    emit('update:game-state', {
+      currentDate: currentDate.value,
+      age: age.value,
+      stats: stats.value,
+      events: updatedEvents,
+      realTimeDays: realTimeDays.value
+    })
+    
+    // 跳转到结束页面
+    emit('set-page', 'EndPage')
+    return // 结束当前函数执行
+  }
+  // 幼儿阶段财富为0，小学后开始有钱
+  if (age.value >= 7) {
+    stats.value.wealth += Math.floor(Math.random() * 100 - 20)
+  } else {
+    stats.value.wealth = 0
+  }
+  
+  // 根据年龄更新学历
+  if (age.value < 7) {
+    stats.value.education = '未上学'
+  } else if (age.value < 13) {
+    stats.value.education = '小学'
+  } else if (age.value < 16) {
+    stats.value.education = '初中'
+  } else if (age.value < 19) {
+    stats.value.education = '高中'
+  } else if (age.value < 23) {
+    stats.value.education = '大学'
+  } else {
+    stats.value.education = '大学以上'
+  }
+  
+  // 添加到大事记（只记录大事件）
+  const newEvent = {
+    id: Date.now(),
+    date: currentDate.value,
+    age: age.value,
+    title: eventTags.value.join(', '),
+    content: eventContent.value,
+    tags: eventTags.value,
+    mood: moodIcon.value,
+    important: Math.random() < 0.2,
+    bigEvent: bigEvent.value
+  }
+  
+  // 只有大事件才添加到最近大事记
+  if (bigEvent.value) {
+    recentEvents.value.unshift({
+      id: newEvent.id,
+      date: newEvent.date,
+      title: `大事件：${bigEvent.value.title}`,
+      content: bigEvent.value.description
+    })
+    if (recentEvents.value.length > 5) {
+      recentEvents.value = recentEvents.value.slice(0, 5)
+    }
+  }
+  
+  // 添加到大事记（只记录大事件）
+  let updatedEvents = events.value
+  if (bigEvent.value) {
+    updatedEvents = [...events.value, newEvent]
+    events.value = updatedEvents
+  }
+  
+  emit('update:game-state', {
+    currentDate: currentDate.value,
+    age: age.value,
+    stats: stats.value,
+    events: updatedEvents,
+    realTimeDays: realTimeDays.value
+  })
+  
+  // 检查是否达到游戏时间120年
+  if (age.value >= 120) {
+    stopTimer()
+    emit('set-page', 'EndPage')
+  }
 }
 
-const skipDays = (days) => {
-  console.log(`Skip ${days} days`)
-  showSkipModal.value = false
+
+
+// 启动定时器
+const startTimer = () => {
+  const interval = 10000 // 10秒
+  
+  timerInterval.value = setInterval(() => {
+    realTimeDays.value++
+    nextYear()
+  }, interval) // 每10秒推进一年
 }
 
-const skipYears = (years) => {
-  console.log(`Skip ${years} years`)
-  showSkipModal.value = false
+// 停止定时器
+const stopTimer = () => {
+  if (timerInterval.value) {
+    clearInterval(timerInterval.value)
+    timerInterval.value = null
+  }
 }
 
 onMounted(() => {
+  // 如果有保存的当前状态，恢复它
+  if (currentState.value.eventContent) {
+    eventContent.value = currentState.value.eventContent
+    eventTags.value = currentState.value.eventTags
+    weather.value = currentState.value.weather
+    weatherType.value = currentState.value.weatherType
+    weatherIcon.value = currentState.value.weatherIcon
+    mood.value = currentState.value.mood
+    moodIcon.value = currentState.value.moodIcon
+    bigEvent.value = currentState.value.bigEvent
+  } else {
+    // 生成初始事件基于当前年龄
+    const yearlyEvent = generateYearlyEvent()
+    eventContent.value = yearlyEvent.content
+    eventTags.value = yearlyEvent.tags
+    weather.value = yearlyEvent.weather.name
+    weatherType.value = yearlyEvent.weather.type
+    weatherIcon.value = yearlyEvent.weather.icon
+    mood.value = yearlyEvent.mood.name
+    moodIcon.value = yearlyEvent.mood.icon
+    bigEvent.value = yearlyEvent.bigEvent
+    
+    // 保存当前状态
+    currentState.value = {
+      eventContent: yearlyEvent.content,
+      eventTags: yearlyEvent.tags,
+      weather: yearlyEvent.weather.name,
+      weatherType: yearlyEvent.weather.type,
+      weatherIcon: yearlyEvent.weather.icon,
+      mood: yearlyEvent.mood.name,
+      moodIcon: yearlyEvent.mood.icon,
+      bigEvent: yearlyEvent.bigEvent
+    }
+  }
+  
   // 初始化数据
+  const current = parseDate(currentDate.value)
+  weekday.value = getWeekday(current)
+  
+  // 启动定时器
+  startTimer()
 })
+
+onUnmounted(() => {
+  // 停止定时器
+  stopTimer()
+})
+
+// 显示跳过时间弹窗
+const showSkipDialog = () => {
+  showSkipModal.value = true
+}
+
+// 关闭跳过时间弹窗
+const closeSkipDialog = () => {
+  showSkipModal.value = false
+}
+
+// 跳过指定年数
+const skipYears = (years) => {
+  // 设置目标年龄
+  targetAge.value = Math.min(age.value + years, 120) // 不超过120岁
+  accumulatedYears.value = years
+  
+  // 立即执行一次年份推进
+  nextYear()
+  
+  // 关闭弹窗
+  closeSkipDialog()
+}
+
+// 直接结束人生
+const skipToEnd = () => {
+  // 如果已经死亡或达到最大年龄，直接跳转
+  if (stats.value.health <= 0 || age.value >= 120) {
+    emit('set-page', 'EndPage')
+    return
+  }
+  
+  // 设置目标年龄为120岁（最大年龄）
+  targetAge.value = 120
+  accumulatedYears.value = 120 - age.value
+  
+  // 立即执行一次年份推进
+  nextYear()
+}
+
+// 记录人生到历史
+const recordLife = () => {
+  const lifeRecord = {
+    id: Date.now(),
+    birthDate: props.gameState.character?.birthDate || '1985年 6月 15日',
+    deathDate: currentDate.value,
+    age: age.value,
+    events: events.value,
+    finalStats: stats.value,
+    character: props.gameState.character,
+    timestamp: new Date().toISOString()
+  }
+  
+  // 添加到历史记录
+  historicalLives.value.unshift(lifeRecord)
+  
+  // 只保留最近5个记录
+  if (historicalLives.value.length > 5) {
+    historicalLives.value = historicalLives.value.slice(0, 5)
+  }
+  
+  // 保存到本地存储
+  localStorage.setItem('historicalLives', JSON.stringify(historicalLives.value))
+}
 </script>
 
 <style scoped>
@@ -408,103 +1216,7 @@ onMounted(() => {
   transition: width 0.5s ease;
 }
 
-.action-bar {
-  display: flex;
-  gap: 10px;
-}
 
-.btn {
-  flex: 1;
-  padding: 14px 16px;
-  font-size: 14px;
-  border-radius: 25px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-}
-
-.btn:active {
-  transform: scale(0.96);
-}
-
-.btn-primary {
-  background: linear-gradient(135deg, var(--accent), #DC143C);
-  color: white;
-  border: none;
-  box-shadow: 0 4px 15px rgba(196, 30, 58, 0.3);
-}
-
-.btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(196, 30, 58, 0.4);
-}
-
-.btn-secondary {
-  background: var(--card-bg);
-  color: var(--primary);
-  border: 2px solid var(--primary);
-}
-
-.btn-secondary:hover {
-  background: var(--primary);
-  color: white;
-}
-
-.btn-icon {
-  font-size: 16px;
-}
-
-.bottom-nav {
-  display: flex;
-  justify-content: space-around;
-  background: var(--card-bg);
-  border-radius: 16px;
-  padding: 12px;
-  box-shadow: var(--shadow);
-}
-
-.nav-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 8px 16px;
-  cursor: pointer;
-  border-radius: 12px;
-  transition: all 0.2s;
-}
-
-.nav-item:hover {
-  background: rgba(139, 69, 19, 0.05);
-}
-
-.nav-item.active {
-  background: rgba(139, 69, 19, 0.1);
-}
-
-.nav-icon {
-  font-size: 20px;
-  transition: transform 0.2s ease;
-}
-
-.nav-item:active .nav-icon {
-  transform: scale(0.9);
-}
-
-.nav-label {
-  font-size: 10px;
-  color: var(--text);
-  opacity: 0.7;
-}
-
-.nav-item.active .nav-label {
-  color: var(--accent);
-  font-weight: 600;
-  opacity: 1;
-}
 
 .big-event-banner {
   background: linear-gradient(135deg, #FFF3E0, #FFE0B2);
@@ -575,8 +1287,134 @@ onMounted(() => {
   100% { transform: translateY(100px); opacity: 0; }
 }
 
-/* 模态框样式 */
-.modal-overlay {
+/* 最近大事记样式 */
+.recent-events {
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: var(--shadow);
+}
+
+.recent-events-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px dashed rgba(139, 69, 19, 0.15);
+}
+
+.recent-events-header h3 {
+  font-size: 16px;
+  color: var(--primary);
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.recent-events-label {
+  font-size: 10px;
+  color: var(--secondary);
+  background: var(--bg);
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.view-all-btn {
+  padding: 6px 12px;
+  background: linear-gradient(135deg, var(--secondary), #E8C9A8);
+  color: var(--primary);
+  border: none;
+  border-radius: 12px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.view-all-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(139, 69, 19, 0.2);
+}
+
+.recent-events-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.recent-event-item {
+  background: linear-gradient(135deg, #FFF9F0, #FFF5E6);
+  border-radius: 12px;
+  padding: 14px;
+  border-left: 3px solid var(--secondary);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.recent-event-item:hover {
+  transform: translateX(4px);
+  box-shadow: 0 4px 12px rgba(139, 69, 19, 0.1);
+}
+
+.event-date {
+  font-size: 11px;
+  color: var(--secondary);
+  margin-bottom: 4px;
+}
+
+.event-title {
+  font-size: 14px;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.no-events {
+  text-align: center;
+  padding: 20px;
+  color: var(--secondary);
+  font-size: 14px;
+  background: var(--bg);
+  border-radius: 12px;
+}
+
+/* 控制按钮样式 */
+.control-buttons {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.control-btn {
+  flex: 1;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, var(--secondary), #E8C9A8);
+  color: var(--primary);
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.control-btn:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(139, 69, 19, 0.2);
+}
+
+.control-btn.primary {
+  background: linear-gradient(135deg, var(--primary), #A0522D);
+  color: white;
+}
+
+.control-btn.primary:hover {
+  box-shadow: 0 4px 12px rgba(139, 69, 19, 0.3);
+}
+
+/* 弹窗样式 */
+.modal {
   position: fixed;
   top: 0;
   left: 0;
@@ -587,77 +1425,94 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .modal-content {
   background: var(--card-bg);
   border-radius: 20px;
   padding: 24px;
-  width: 80%;
-  max-width: 320px;
-  box-shadow: var(--shadow);
-  animation: fadeIn 0.3s ease-out;
+  max-width: 90%;
+  width: 320px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  animation: slideIn 0.3s ease;
 }
 
-.modal-content h3 {
+@keyframes slideIn {
+  from { transform: translateY(-20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px dashed rgba(139, 69, 19, 0.15);
+}
+
+.modal-header h3 {
   font-size: 18px;
   color: var(--primary);
-  text-align: center;
+  font-weight: 700;
+  margin: 0;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: var(--secondary);
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.close-btn:hover {
+  background: var(--bg);
+  color: var(--primary);
+}
+
+.modal-body p {
+  font-size: 14px;
+  color: var(--text);
   margin-bottom: 20px;
+  text-align: center;
 }
 
 .skip-options {
-  margin-bottom: 20px;
-}
-
-.skip-group {
-  margin-bottom: 16px;
-}
-
-.skip-group h4 {
-  font-size: 14px;
-  color: var(--secondary);
-  margin-bottom: 8px;
-}
-
-.skip-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
 }
 
 .skip-btn {
-  flex: 1;
-  min-width: 80px;
-  padding: 10px 16px;
-  background: var(--bg);
-  border: 1px solid var(--secondary);
+  padding: 12px 16px;
+  background: linear-gradient(135deg, var(--secondary), #E8C9A8);
+  color: var(--primary);
+  border: none;
   border-radius: 12px;
   font-size: 14px;
-  color: var(--text);
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .skip-btn:hover {
-  background: var(--secondary);
-  color: white;
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(139, 69, 19, 0.2);
 }
 
-.cancel-btn {
-  width: 100%;
-  padding: 12px;
-  background: transparent;
-  border: 2px solid var(--primary);
-  border-radius: 25px;
-  font-size: 14px;
-  color: var(--primary);
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.cancel-btn:hover {
-  background: var(--primary);
-  color: white;
-}
 </style>

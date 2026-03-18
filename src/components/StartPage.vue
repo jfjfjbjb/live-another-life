@@ -43,11 +43,113 @@
           <span>跳过功能</span>
         </div>
       </div>
+
+      <!-- 历史人生记录 -->
+      <div v-if="historicalLives.length > 0" class="historical-lives">
+        <h3 class="historical-title">历史人生</h3>
+        <div class="historical-list">
+          <div 
+            v-for="life in historicalLives" 
+            :key="life.id"
+            class="historical-item"
+            @click="viewLifeDetail(life)"
+          >
+            <div class="historical-info">
+              <div class="historical-age">{{ life.age }}岁</div>
+              <div class="historical-period">{{ life.birthDate }} - {{ life.deathDate }}</div>
+            </div>
+            <div class="historical-arrow">›</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 人生详情弹窗 -->
+    <div v-if="selectedLife" class="modal" @click="closeLifeDetail">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h3>人生回顾</h3>
+          <button class="close-btn" @click="closeLifeDetail">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="life-summary">
+            <div class="life-header">
+              <h3>{{ selectedLife.character?.name || '无名氏' }}</h3>
+            </div>
+            <div class="life-meta">
+              <div class="meta-item">
+                <span class="meta-label">寿命：</span>
+                <span class="meta-value">{{ selectedLife.age }}岁</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">时期：</span>
+                <span class="meta-value">{{ selectedLife.birthDate }} - {{ selectedLife.deathDate }}</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">财富：</span>
+                <span class="meta-value">¥{{ selectedLife.finalStats.wealth.toLocaleString() }}</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">学历：</span>
+                <span class="meta-value">{{ selectedLife.finalStats.education }}</span>
+              </div>
+            </div>
+            <div class="life-events">
+              <h4>重要事件 ({{ importantEvents.length }})</h4>
+              <div class="event-list">
+                <div 
+                  v-for="event in importantEvents.slice(0, 5)" 
+                  :key="event.id"
+                  class="event-item"
+                >
+                  <div class="event-date">{{ event.date }}</div>
+                  <div class="event-title">{{ event.bigEvent ? '大事件：' + event.bigEvent.title : event.title }}</div>
+                </div>
+                <div v-if="importantEvents.length > 5" class="event-more">
+                  还有 {{ importantEvents.length - 5 }} 个事件...
+                </div>
+                <div v-if="importantEvents.length === 0" class="no-events">
+                  暂无重要事件
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
+import { ref, onMounted, computed } from 'vue'
+
+// 历史人生记录
+const historicalLives = ref([])
+const selectedLife = ref(null)
+
+// 重要事件（只显示大事件）
+const importantEvents = computed(() => {
+  if (!selectedLife.value) return []
+  return selectedLife.value.events.filter(event => event.bigEvent)
+})
+
+onMounted(() => {
+  // 从本地存储加载历史人生记录
+  const savedLives = localStorage.getItem('historicalLives')
+  if (savedLives) {
+    historicalLives.value = JSON.parse(savedLives)
+  }
+})
+
+// 查看人生详情
+const viewLifeDetail = (life) => {
+  selectedLife.value = life
+}
+
+// 关闭人生详情
+const closeLifeDetail = () => {
+  selectedLife.value = null
+}
 </script>
 
 <style scoped>
@@ -244,4 +346,225 @@
 .deco-top-right { top: 20px; right: 20px; transform: rotate(90deg); }
 .deco-bottom-left { bottom: 20px; left: 20px; transform: rotate(-90deg); }
 .deco-bottom-right { bottom: 20px; right: 20px; transform: rotate(180deg); }
+
+/* 历史人生记录样式 */
+.historical-lives {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px dashed rgba(139, 69, 19, 0.15);
+}
+
+.historical-title {
+  font-size: 16px;
+  color: var(--primary);
+  font-weight: 700;
+  margin-bottom: 16px;
+  text-align: left;
+}
+
+.historical-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.historical-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #FFF9F0, #FFF5E6);
+  border-radius: 12px;
+  border-left: 3px solid var(--secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.historical-item:hover {
+  transform: translateX(4px);
+  box-shadow: 0 4px 12px rgba(139, 69, 19, 0.1);
+}
+
+.historical-info {
+  flex: 1;
+}
+
+.historical-age {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--primary);
+  margin-bottom: 4px;
+}
+
+.historical-period {
+  font-size: 12px;
+  color: var(--secondary);
+}
+
+.historical-arrow {
+  font-size: 20px;
+  color: var(--secondary);
+  opacity: 0.7;
+}
+
+/* 弹窗样式 */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal-content {
+  background: var(--card-bg);
+  border-radius: 20px;
+  padding: 24px;
+  max-width: 90%;
+  width: 360px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from { transform: translateY(-20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px dashed rgba(139, 69, 19, 0.15);
+}
+
+.modal-header h3 {
+  font-size: 18px;
+  color: var(--primary);
+  font-weight: 700;
+  margin: 0;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: var(--secondary);
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.close-btn:hover {
+  background: var(--bg);
+  color: var(--primary);
+}
+
+.life-header {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.life-header h3 {
+  font-size: 24px;
+  color: var(--primary);
+  font-weight: 700;
+  margin: 0;
+}
+
+.life-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.life-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.meta-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(139, 69, 19, 0.1);
+}
+
+.meta-label {
+  font-size: 14px;
+  color: var(--secondary);
+}
+
+.meta-value {
+  font-size: 14px;
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.life-events h4 {
+  font-size: 16px;
+  color: var(--primary);
+  font-weight: 700;
+  margin-bottom: 12px;
+  margin-top: 0;
+}
+
+.event-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.event-item {
+  padding: 10px;
+  background: linear-gradient(135deg, #FFF9F0, #FFF5E6);
+  border-radius: 8px;
+  border-left: 2px solid var(--secondary);
+}
+
+.event-date {
+  font-size: 11px;
+  color: var(--secondary);
+  margin-bottom: 4px;
+}
+
+.event-title {
+  font-size: 13px;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.event-more {
+  font-size: 12px;
+  color: var(--secondary);
+  text-align: center;
+  padding: 8px;
+  background: var(--bg);
+  border-radius: 8px;
+  margin-top: 8px;
+}
+
 </style>
