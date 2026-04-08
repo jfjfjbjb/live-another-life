@@ -60,7 +60,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, watch } from 'vue'
+import { generateCharacter } from '../data/characters.js'
+import { generateLocation } from '../data/locations.js'
 
 const props = defineProps({
   gameState: {
@@ -71,84 +73,27 @@ const props = defineProps({
 
 const emit = defineEmits(['update:game-state', 'next-page', 'prev-page'])
 
-const character = ref({
-  name: props.gameState.userName || '李建国',
-  avatar: '👶',
-  role: '婴儿',
-  birthDate: props.gameState.birthDate || '1985年6月15日',
-  birthPlace: props.gameState.birthPlace || '江苏省苏州市平江区',
-  age: 0,
-  personality: '内向而稳重，内心有着自己的想法',
-  familyBackground: '城市普通家庭 · 父亲是工厂工人 · 母亲在纺织厂上班',
-  talents: ['📚 记忆力强', '🎨 绘画天赋', '🏃 运动细胞']
-})
-
-const roles = ['农民', '工人', '学生', '教师', '医生', '护士', '工程师', '科学家', '军人', '警察', '公务员', '商人', '司机', '厨师', '服务员', '个体户', '艺术家', '作家', '记者', '主持人']
-const personalities = [
-  '内向而稳重，内心有着自己的想法',
-  '外向开朗，善于与人交流',
-  '中庸之道，遇事冷静思考',
-  '活泼好动，充满好奇心',
-  '沉稳内敛，做事认真负责'
-]
-const familyBackgrounds = [
-  '城市富裕家庭 · 父亲是企业家 · 母亲是教师',
-  '城市普通家庭 · 父亲是工厂工人 · 母亲在纺织厂上班',
-  '城市贫困家庭 · 父母都是普通工人',
-  '农村富裕家庭 · 家里有大片农田',
-  '农村普通家庭 · 父母都是农民',
-  '农村贫困家庭 · 生活比较艰苦'
-]
-const talents = [
-  '📚 记忆力强',
-  '🎨 绘画天赋',
-  '🏃 运动细胞',
-  '🎵 音乐天赋',
-  '🧮 数学天赋',
-  '📝 写作天赋',
-  '💡 创新思维',
-  '🤝 人际交往',
-  '💪 体力充沛',
-  '🧠 逻辑思维'
-]
-const provinces = ['北京市', '上海市', '江苏省', '浙江省', '广东省', '山东省', '河南省', '四川省', '湖北省', '湖南省', '河北省', '福建省', '安徽省', '辽宁省', '黑龙江省', '吉林省', '山西省', '陕西省', '江西省', '云南省', '贵州省', '广西壮族自治区', '内蒙古自治区', '新疆维吾尔自治区', '宁夏回族自治区', '青海省', '甘肃省', '西藏自治区', '海南省', '重庆市', '天津市', '香港特别行政区', '澳门特别行政区', '台湾省']
-const cities = {
-  '北京市': ['北京市'],
-  '上海市': ['上海市'],
-  '江苏省': ['南京市', '苏州市', '无锡市', '常州市', '南通市'],
-  '浙江省': ['杭州市', '宁波市', '温州市', '嘉兴市', '湖州市'],
-  '广东省': ['广州市', '深圳市', '佛山市', '东莞市', '中山市'],
-  '山东省': ['济南市', '青岛市', '烟台市', '潍坊市', '临沂市'],
-  '河南省': ['郑州市', '洛阳市', '开封市', '安阳市', '新乡市'],
-  '四川省': ['成都市', '绵阳市', '德阳市', '自贡市', '泸州市'],
-  '湖北省': ['武汉市', '宜昌市', '襄阳市', '荆州市', '黄冈市'],
-  '湖南省': ['长沙市', '株洲市', '湘潭市', '衡阳市', '邵阳市'],
-  '河北省': ['石家庄市', '唐山市', '秦皇岛市', '邯郸市', '保定市'],
-  '福建省': ['福州市', '厦门市', '泉州市', '漳州市', '莆田市'],
-  '安徽省': ['合肥市', '芜湖市', '蚌埠市', '淮南市', '马鞍山市'],
-  '辽宁省': ['沈阳市', '大连市', '鞍山市', '抚顺市', '本溪市'],
-  '黑龙江省': ['哈尔滨市', '齐齐哈尔市', '牡丹江市', '佳木斯市', '大庆市'],
-  '吉林省': ['长春市', '吉林市', '四平市', '辽源市', '通化市'],
-  '山西省': ['太原市', '大同市', '阳泉市', '长治市', '晋城市'],
-  '陕西省': ['西安市', '宝鸡市', '咸阳市', '铜川市', '渭南市'],
-  '江西省': ['南昌市', '九江市', '景德镇市', '萍乡市', '新余市'],
-  '云南省': ['昆明市', '曲靖市', '玉溪市', '保山市', '昭通市'],
-  '贵州省': ['贵阳市', '遵义市', '六盘水市', '安顺市', '毕节市'],
-  '广西壮族自治区': ['南宁市', '柳州市', '桂林市', '梧州市', '北海市'],
-  '内蒙古自治区': ['呼和浩特市', '包头市', '乌海市', '赤峰市', '通辽市'],
-  '新疆维吾尔自治区': ['乌鲁木齐市', '克拉玛依市', '吐鲁番市', '哈密市', '阿克苏地区'],
-  '宁夏回族自治区': ['银川市', '石嘴山市', '吴忠市', '固原市', '中卫市'],
-  '青海省': ['西宁市', '海东市', '海北藏族自治州', '黄南藏族自治州', '海南藏族自治州'],
-  '甘肃省': ['兰州市', '嘉峪关市', '金昌市', '白银市', '天水市'],
-  '西藏自治区': ['拉萨市', '日喀则市', '昌都市', '林芝市', '山南市'],
-  '海南省': ['海口市', '三亚市', '三沙市', '儋州市', '文昌市'],
-  '重庆市': ['重庆市'],
-  '天津市': ['天津市'],
-  '香港特别行政区': ['香港'],
-  '澳门特别行政区': ['澳门'],
-  '台湾省': ['台北市', '高雄市', '台中市', '台南市', '新北市']
+// 角色显示用的映射
+const roleDisplayNames = {
+  farmer: '农民', worker: '工人', student: '学生', teacher: '教师',
+  doctor: '医生', nurse: '护士', engineer: '工程师', scientist: '科学家',
+  soldier: '军人', police: '警察', civilServant: '公务员', businessman: '商人',
+  driver: '司机', chef: '厨师', waiter: '服务员', individual: '个体户',
+  artist: '艺术家', writer: '作家', journalist: '记者', host: '主持人',
+  lawyer: '律师', accountant: '会计', courier: '快递员', electrician: '电工',
+  plumber: '水管工', carpenter: '木匠', barber: '理发师', photographer: '摄影师',
+  fitnessCoach: '健身教练', realEstate: '房产中介', insurance: '保险员', it: 'IT工程师',
+  designer: '设计师', manager: '企业经理', shopOwner: '店主', fisherman: '渔民',
+  herdsman: '牧民', bricklayer: '泥瓦匠', tailor: '裁缝', guard: '保安',
+  cleaner: '清洁工', nanny: '保姆', vendor: '小商贩', veterinarian: '兽医',
+  florist: '花店老板', baker: '烘焙师', mechanic: '修理工', pilot: '飞行员', captain: '船长'
 }
-const districts = ['朝阳区', '海淀区', '东城区', '西城区', '丰台区', '石景山区', '门头沟区', '房山区', '通州区', '顺义区', '昌平区', '大兴区', '怀柔区', '平谷区', '密云区', '延庆区', '平江区', '沧浪区', '金阊区', '虎丘区', '吴中区', '相城区', '昆山市', '张家港市', '常熟市', '太仓市']
+
+const talentDisplayEmojis = {
+  smart: '📚', diligent: '💪', musical: '🎵', artistic: '🎨', athletic: '🏃',
+  social: '🤝', leadership: '👑', technical: '🔧', literary: '📝', business: '💰',
+  patient: '🧘', brave: '🦁', charismatic: '✨', creative: '💡', memory: '🧠'
+}
 
 const randomElement = (array) => array[Math.floor(Math.random() * array.length)]
 
@@ -158,23 +103,6 @@ const generateName = () => {
   return randomElement(surnames) + randomElement(names)
 }
 
-const generateAvatar = () => {
-  const avatars = ['👶', '🧒', '👦', '👧', '👨', '👩', '👴', '👵', '👨‍🎓', '👩‍🎓', '👨‍💼', '👩‍💼', '👨‍⚕️', '👩‍⚕️', '👨‍🏫', '👩‍🏫', '👨‍🔧', '👩‍🔧', '👨‍🌾', '👩‍🌾']
-  return randomElement(avatars)
-}
-
-const generateBirthPlace = () => {
-  const province = randomElement(provinces)
-  const city = randomElement(cities[province] || [province])
-  const district = randomElement(districts)
-  return `${province}${city}${district}`
-}
-
-const generateTalents = () => {
-  const shuffled = talents.sort(() => 0.5 - Math.random())
-  return shuffled.slice(0, 3)
-}
-
 const generateRoleByAge = (age) => {
   if (age < 3) return '婴儿'
   if (age < 7) return '幼儿'
@@ -182,7 +110,7 @@ const generateRoleByAge = (age) => {
   if (age < 16) return '初中生'
   if (age < 19) return '高中生'
   if (age < 23) return '大学生'
-  if (age < 60) return randomElement(roles)
+  if (age < 60) return '打工人'
   return '退休人员'
 }
 
@@ -194,40 +122,73 @@ const generateAvatarByAge = (age) => {
   return '👴'
 }
 
+const character = ref({
+  name: props.gameState.userName || '李建国',
+  avatar: '👶',
+  role: '婴儿',
+  birthDate: props.gameState.birthDate || '1985年6月15日',
+  birthPlace: props.gameState.birthPlace || '江苏省苏州市',
+  age: 0,
+  personality: '内向而稳重，内心有着自己的想法',
+  familyBackground: '城市普通家庭',
+  talents: ['📚 记忆力强', '🎨 绘画天赋', '🏃 运动细胞'],
+  _raw: null // 存储原始角色数据供游戏使用
+})
+
 const rerollCharacter = () => {
+  // 使用统一的角色生成函数
+  const rawChar = generateCharacter()
+  const location = generateLocation()
   const age = character.value.age
+
+  // 构建显示用角色
   character.value = {
     name: props.gameState.userName || generateName(),
     avatar: generateAvatarByAge(age),
     role: generateRoleByAge(age),
     birthDate: props.gameState.birthDate || '1985年6月15日',
-    birthPlace: props.gameState.birthPlace || generateBirthPlace(),
+    birthPlace: location.fullAddress,
     age: age,
-    personality: randomElement(personalities),
-    familyBackground: randomElement(familyBackgrounds),
-    talents: generateTalents()
+    personality: `${rawChar.personality.name} · ${rawChar.personality.description}`,
+    familyBackground: `${rawChar.familyBackground.cityType === '城市' ? '城市' : '农村'}${rawChar.familyBackground.wealthLevel}家庭 · ${rawChar.familyBackground.description}`,
+    talents: rawChar.talents.map(t => `${talentDisplayEmojis[t.id] || '✨'} ${t.name}`),
+    _raw: rawChar
   }
 }
 
 const startLife = () => {
+  // 构建完整的角色数据（包含游戏所需属性和显示属性）
+  const fullCharacter = {
+    ...(character.value._raw || {}),
+    birthPlace: character.value.birthPlace,
+    name: character.value.name
+  }
   emit('update:game-state', {
-    character: character.value,
+    character: fullCharacter,
     currentDate: character.value.birthDate,
     age: character.value.age,
     stats: {
       health: 100,
-      wealth: 0,
+      wealth: character.value._raw?.familyBackground?.income || 100,
       education: ''
     },
+    events: [],
     isGameStarted: true
   })
   emit('next-page')
 }
 
 onMounted(() => {
-  // 初始化角色
   rerollCharacter()
 })
+
+// 监听 gameState 变化，当游戏重置时重新生成角色
+watch(() => props.gameState, (newState) => {
+  if (newState && !newState.character && newState.userName !== undefined) {
+    // 游戏被重置，重新生成角色
+    rerollCharacter()
+  }
+}, { immediate: true })
 </script>
 
 <style scoped>

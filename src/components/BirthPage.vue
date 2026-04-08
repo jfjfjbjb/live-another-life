@@ -102,6 +102,7 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
+import { historyEvents } from '../data/historyEvents.js'
 
 const props = defineProps({
   gameState: {
@@ -115,8 +116,8 @@ const emit = defineEmits(['update:game-state', 'next-page', 'prev-page'])
 const selectedYear = ref(1985)
 const selectedMonth = ref(6)
 const selectedDay = ref(15)
-const userName = ref(props.gameState.userName || '')
-const birthPlace = ref(props.gameState.birthPlace || '')
+const userName = ref(props.gameState?.userName || '')
+const birthPlace = ref(props.gameState?.birthPlace || '')
 
 const years = Array.from({ length: 76 }, (_, i) => 1949 + i)
 const months = Array.from({ length: 12 }, (_, i) => i + 1)
@@ -136,7 +137,7 @@ const weekday = computed(() => {
 })
 
 const lunarDate = ref('乙丑年五月廿八')
-const historyEvent = ref('1985年6月15日，上海市与美国费城市结为友好城市。费城是美国的第五大城市，这次结好仪式在上海展览中心举行，两市在经济、文化、科技等领域展开交流合作。')
+const historyEvent = ref('')
 
 const yearScroll = ref(null)
 const monthScroll = ref(null)
@@ -164,9 +165,14 @@ const selectDay = (day) => {
 }
 
 const updateHistoryEvent = () => {
-  // 这里可以根据选择的日期加载对应的历史事件
-  // 目前使用模拟数据
-  historyEvent.value = `${selectedYear.value}年${selectedMonth.value}月${selectedDay.value}日，这一天发生了很多重要的历史事件...`
+  const yearEvents = historyEvents[selectedYear.value]
+  if (yearEvents && yearEvents.length > 0) {
+    // 随机选择该年的一个事件
+    const event = yearEvents[Math.floor(Math.random() * yearEvents.length)]
+    historyEvent.value = `${event.title}：${event.description}`
+  } else {
+    historyEvent.value = `${selectedYear.value}年虽然没有重大历史记录，但你出生的这一天，注定将写下属于你自己的故事。`
+  }
 }
 
 const confirmBirth = () => {
@@ -184,6 +190,8 @@ onMounted(() => {
   scrollToSelected(yearScroll.value, selectedYear.value - 1949)
   scrollToSelected(monthScroll.value, selectedMonth.value - 1)
   scrollToSelected(dayScroll.value, selectedDay.value - 1)
+  // 初始化历史事件
+  updateHistoryEvent()
 })
 
 const scrollToSelected = (scrollElement, index) => {
@@ -205,6 +213,14 @@ watch(selectedMonth, () => {
 watch(selectedDay, () => {
   scrollToSelected(dayScroll.value, selectedDay.value - 1)
 })
+
+// 监听 gameState 变化，当游戏重置时同步更新内部状态
+watch(() => props.gameState, (newState) => {
+  if (newState) {
+    userName.value = newState.userName || ''
+    birthPlace.value = newState.birthPlace || ''
+  }
+}, { immediate: true })
 </script>
 
 <style scoped>

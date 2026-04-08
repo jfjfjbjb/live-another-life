@@ -117,33 +117,34 @@ const closeEventDetail = () => {
 }
 
 onMounted(() => {
-  // 从gameState中获取事件数据
   const gameEvents = props.gameState.events || []
-  
+
+  // 获取游戏内的当前年份
+  const currentDateStr = props.gameState.currentDate || ''
+  const currentYearMatch = currentDateStr.match(/(\d+)年/)
+  const currentGameYear = currentYearMatch ? currentYearMatch[1] : null
+
   let totalEvents = 0
   let importantEvents = 0
   let thisYearEvents = 0
-  
+
   gameEvents.forEach(event => {
     totalEvents++
     if (event.important || event.bigEvent) {
       importantEvents++
-      
-      // 检查是否是今年的事件（简单实现，实际应该根据当前游戏日期判断）
-      const yearMatch = event.date.match(/(\d+)年/)
-      if (yearMatch) {
-        const year = yearMatch[1]
-        if (year === new Date().getFullYear().toString()) {
-          thisYearEvents++
-        }
-      }
+    }
+    // 检查是否是今年的事件（使用游戏内年份）
+    const yearMatch = event.date.match(/(\d+)年/)
+    if (yearMatch && currentGameYear && yearMatch[1] === currentGameYear) {
+      thisYearEvents++
     }
   })
-  
-  // 更新数据 - 只显示大事件
-  allEvents.value = gameEvents.filter(event => event.bigEvent).sort((a, b) => {
-    // 按日期降序排序
-    return new Date(b.date.replace(/年|月|日/g, '-')) - new Date(a.date.replace(/年|月|日/g, '-'))
+
+  // 显示所有事件，按日期降序排序
+  allEvents.value = [...gameEvents].sort((a, b) => {
+    const dateA = a.date.replace(/年|月|日/g, '-')
+    const dateB = b.date.replace(/年|月|日/g, '-')
+    return new Date(dateB) - new Date(dateA)
   })
   stats.value = {
     totalEvents,

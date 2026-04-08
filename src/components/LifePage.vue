@@ -131,8 +131,8 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { eventTypes, ageEvents } from '../data/events.js'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { eventTypes, ageEvents, getAgeEvent, getProfessionEvent, personalityEventModifiers, getTalentEvents } from '../data/events.js'
 import { weathers, locationWeatherMap } from '../data/weather.js'
 import { moods } from '../data/moods.js'
 import { bigEvents } from '../data/bigEvents.js'
@@ -148,7 +148,35 @@ const props = defineProps({
 const emit = defineEmits(['update:game-state', 'set-page'])
 
 // 从gameState中获取数据
+// 重要：需要watch来同步props变化，因为ref只初始化一次
 const currentDate = ref(props.gameState.currentDate || '1985年 6月 15日')
+const events = ref([...props.gameState.events])
+// 从gameState中获取最近的大事件
+const recentEvents = ref([])
+
+// 监听gameState变化，同步currentDate和events
+watch(() => props.gameState.currentDate, (newDate) => {
+  if (newDate) {
+    currentDate.value = newDate
+  }
+}, { immediate: true })
+
+watch(() => props.gameState.events, (newEvents) => {
+  console.log(newEvents, 6666)
+  events.value = [...newEvents]
+  // 同时重置recentEvents
+  recentEvents.value = events.value
+    .filter(event => event.bigEvent)
+    .slice(-5)
+    .reverse()
+    .map(event => ({
+      id: event.id,
+      date: event.date,
+      title: `大事件：${event.bigEvent.title}`,
+      content: event.bigEvent.description
+    }))
+}, { immediate: true })
+
 const weekday = ref('星期日')
 const lunarDate = ref('乙丑年五月廿八')
 const location = ref(props.gameState.character?.birthPlace || '江苏省 · 苏州市 · 平江区')
@@ -156,15 +184,27 @@ const weather = ref('晴')
 
 // 计算年龄（唯一的年龄来源）
 const age = computed(() => {
-  const birthDate = parseDate(props.gameState.character?.birthDate || '1985年 6月 15日')
-  const current = parseDate(currentDate.value)
-  
-  // 计算总天数差
-  const timeDiff = current.getTime() - birthDate.getTime()
-  const totalDays = Math.floor(timeDiff / (1000 * 3600 * 24))
-  
-  // 计算年数
-  return Math.floor(totalDays / 365)
+  const birthDateStr = props.gameState.birthDate
+  const currentDateStr = currentDate.value
+
+  if (!birthDateStr || !currentDateStr) return 0
+
+  const birth = parseDate(birthDateStr)
+  const current = parseDate(currentDateStr)
+
+  // 使用完整的日期比较来计算年龄
+  let ageYears = current.getFullYear() - birth.getFullYear()
+  const birthMonth = birth.getMonth()
+  const birthDay = birth.getDate()
+  const currentMonth = current.getMonth()
+  const currentDay = current.getDate()
+
+  // 如果当前日期还没到生日月份或日期，减1
+  if (currentMonth < birthMonth || (currentMonth === birthMonth && currentDay < birthDay)) {
+    ageYears--
+  }
+
+  return Math.max(0, ageYears)
 })
 
 // 计算具体年龄（只计算年数）
@@ -185,21 +225,6 @@ const stats = ref(props.gameState.stats || {
   wealth: 0,
   education: ''
 })
-
-// 从gameState中获取最近的大事件
-const events = ref(props.gameState.events || [])
-const recentEvents = ref(
-  events.value
-    .filter(event => event.bigEvent)
-    .map(event => ({
-      id: event.id,
-      date: event.date,
-      title: `大事件：${event.bigEvent.title}`,
-      content: event.bigEvent.description
-    }))
-    .slice(-5)
-    .reverse()
-) // 只获取最近5个大事件并反转顺序
 
 // 定时器相关
 const timerInterval = ref(null)
@@ -360,153 +385,147 @@ const generateRandomEvent = () => {
 // 推进到下一年
 const nextYear = () => {
   // 如果有目标年龄且当前年龄小于目标年龄，快速推进
-  if (targetAge.value && age.value < targetAge.value) {
-    // 快速模式：直接跳到目标年龄，只记录关键信息
-    const maxIterations = targetAge.value - age.value // 限制最大迭代次数
-    let iterations = 0
-    while (age.value < targetAge.value && stats.value.health > 0 && age.value < 120 && iterations < maxIterations) {
-      iterations++
+  if (targetAge.value !== null && age.value < targetAge.value) {
+    // 快速模式：计算需要推进的年数
+    const yearsToSkip = targetAge.value - age.value
+
+    for (let i = 0; i < yearsToSkip && stats.value.health > 0 && age.value < 120; i++) {
       // 更新日期到下一年的生日
       const current = parseDate(currentDate.value)
       current.setFullYear(current.getFullYear() + 1)
       currentDate.value = formatDate(current)
       weekday.value = getWeekday(current)
-      
+
       // 重新计算年龄
-      const birthDate = parseDate(props.gameState.character?.birthDate || '1985年 6月 15日')
+      const birthDate = parseDate(props.gameState.birthDate || '1985年 6月 15日')
       const currentDateObj = parseDate(currentDate.value)
       const timeDiff = currentDateObj.getTime() - birthDate.getTime()
       const totalDays = Math.floor(timeDiff / (1000 * 3600 * 24))
       const currentAge = Math.floor(totalDays / 365)
-      
-      // 年度健康减少（简化计算）
-      let healthDecrease = 0.5 // 基础年度减少（更缓慢）
-      if (currentAge >= 70) healthDecrease = 15 // 70岁后快速减少
-      else if (currentAge >= 60) healthDecrease = 8 // 60-69岁较快减少
-      else if (currentAge >= 45) healthDecrease = 3 // 45-59岁缓慢减少
-      else if (currentAge >= 30) healthDecrease = 1 // 30-44岁几乎不减少
-      
+
+      // 年度健康减少
+      let healthDecrease = 0.5
+      if (currentAge >= 70) healthDecrease = 15
+      else if (currentAge >= 60) healthDecrease = 8
+      else if (currentAge >= 45) healthDecrease = 3
+      else if (currentAge >= 30) healthDecrease = 1
+
+      // 大事件效果应用
+      const currentYear = currentDateObj.getFullYear()
+      const yearlyEvent = generateYearlyEvent()
+      if (yearlyEvent.bigEvent?.effect) {
+        const eff = yearlyEvent.bigEvent.effect
+        if (eff.health) healthDecrease -= eff.health // 正值减少扣除
+        if (eff.wealth) stats.value.wealth += eff.wealth
+      }
+
       stats.value.health = Math.max(0, stats.value.health - healthDecrease)
-      
-      // 更新学历和财富（简化计算）
+
+      // 快速模式：每10年记录一次大事记
+      if (currentAge % 10 === 0 || yearlyEvent.bigEvent) {
+        recordYearlyEvent(yearlyEvent)
+      }
+
       updateYearlyStats()
-      
-      // 检查是否达到游戏时间120年或死亡
+
       if (currentAge >= 120 || stats.value.health <= 0) {
         break
       }
     }
-    
-    // 到达目标年龄后，生成当前年份的详细事件
+
     targetAge.value = null
     accumulatedYears.value = 0
-    
-    // 如果还活着，生成当前年份的详细事件
+
     if (stats.value.health > 0) {
-      const yearlyEvent = generateYearlyEvent()
-      eventContent.value = yearlyEvent.content
-      eventTags.value = yearlyEvent.tags
-      weather.value = yearlyEvent.weather.name
-      weatherType.value = yearlyEvent.weather.type
-      weatherIcon.value = yearlyEvent.weather.icon
-      mood.value = yearlyEvent.mood.name
-      moodIcon.value = yearlyEvent.mood.icon
-      bigEvent.value = yearlyEvent.bigEvent
-      
-      // 保存当前状态
+      const finalEvent = generateYearlyEvent()
+      eventContent.value = finalEvent.content
+      eventTags.value = finalEvent.tags
+      weather.value = finalEvent.weather.name
+      weatherType.value = finalEvent.weather.type
+      weatherIcon.value = finalEvent.weather.icon
+      mood.value = finalEvent.mood.name
+      moodIcon.value = finalEvent.mood.icon
+      bigEvent.value = finalEvent.bigEvent
+
       currentState.value = {
-        eventContent: yearlyEvent.content,
-        eventTags: yearlyEvent.tags,
-        weather: yearlyEvent.weather.name,
-        weatherType: yearlyEvent.weather.type,
-        weatherIcon: yearlyEvent.weather.icon,
-        mood: yearlyEvent.mood.name,
-        moodIcon: yearlyEvent.mood.icon,
-        bigEvent: yearlyEvent.bigEvent
+        eventContent: finalEvent.content,
+        eventTags: finalEvent.tags,
+        weather: finalEvent.weather.name,
+        weatherType: finalEvent.weather.type,
+        weatherIcon: finalEvent.weather.icon,
+        mood: finalEvent.mood.name,
+        moodIcon: finalEvent.mood.icon,
+        bigEvent: finalEvent.bigEvent
       }
-      
-      // 记录当前年份事件
-      recordYearlyEvent(yearlyEvent)
+
+      recordYearlyEvent(finalEvent)
     } else {
-      // 如果已经死亡，处理死亡
       handleDeath()
       return
     }
   } else {
     // 正常模式：详细处理每一年
-    // 年龄会自动通过computed属性计算
-    
-    // 更新日期到下一年的生日
     const current = parseDate(currentDate.value)
     current.setFullYear(current.getFullYear() + 1)
     currentDate.value = formatDate(current)
     weekday.value = getWeekday(current)
-    
-    // 生成年度总结事件
-  const yearlyEvent = generateYearlyEvent()
-  eventContent.value = yearlyEvent.content
-  eventTags.value = yearlyEvent.tags
-  weather.value = yearlyEvent.weather.name
-  weatherType.value = yearlyEvent.weather.type
-  weatherIcon.value = yearlyEvent.weather.icon
-  mood.value = yearlyEvent.mood.name
-  moodIcon.value = yearlyEvent.mood.icon
-  bigEvent.value = yearlyEvent.bigEvent
-  
-  // 保存当前状态
-  currentState.value = {
-    eventContent: yearlyEvent.content,
-    eventTags: yearlyEvent.tags,
-    weather: yearlyEvent.weather.name,
-    weatherType: yearlyEvent.weather.type,
-    weatherIcon: yearlyEvent.weather.icon,
-    mood: yearlyEvent.mood.name,
-    moodIcon: yearlyEvent.mood.icon,
-    bigEvent: yearlyEvent.bigEvent
-  }
-    
+
+    const yearlyEvent = generateYearlyEvent()
+    eventContent.value = yearlyEvent.content
+    eventTags.value = yearlyEvent.tags
+    weather.value = yearlyEvent.weather.name
+    weatherType.value = yearlyEvent.weather.type
+    weatherIcon.value = yearlyEvent.weather.icon
+    mood.value = yearlyEvent.mood.name
+    moodIcon.value = yearlyEvent.mood.icon
+    bigEvent.value = yearlyEvent.bigEvent
+
+    currentState.value = {
+      eventContent: yearlyEvent.content,
+      eventTags: yearlyEvent.tags,
+      weather: yearlyEvent.weather.name,
+      weatherType: yearlyEvent.weather.type,
+      weatherIcon: yearlyEvent.weather.icon,
+      mood: yearlyEvent.mood.name,
+      moodIcon: yearlyEvent.mood.icon,
+      bigEvent: yearlyEvent.bigEvent
+    }
+
     // 年度健康减少
-    let healthDecrease = 0.5 // 基础年度减少（更缓慢）
+    let healthDecrease = 0.5
     if (age.value >= 70) {
-      healthDecrease = 15 // 70岁后快速减少
+      healthDecrease = 15
     } else if (age.value >= 60) {
-      healthDecrease = 8 // 60-69岁较快减少
+      healthDecrease = 8
     } else if (age.value >= 45) {
-      healthDecrease = 3 // 45-59岁缓慢减少
+      healthDecrease = 3
     } else if (age.value >= 30) {
-      healthDecrease = 1 // 30-44岁几乎不减少
+      healthDecrease = 1
     }
-    
-    // 大事件导致额外健康减少
-    if (yearlyEvent.bigEvent) {
-      if (yearlyEvent.bigEvent.title === '意外' || yearlyEvent.bigEvent.title === '健康危机') {
-        healthDecrease += 30 + Math.random() * 20 // 意外或健康危机额外减少30-50（可能导致早死）
-      }
+
+    // 应用大事件效果
+    if (yearlyEvent.bigEvent?.effect) {
+      const eff = yearlyEvent.bigEvent.effect
+      if (eff.health) healthDecrease -= eff.health
+      if (eff.wealth) stats.value.wealth += eff.wealth
     }
-    
-    // 应用健康减少
+
     stats.value.health = Math.max(0, stats.value.health - healthDecrease)
-    
-    // 检查健康值是否为0（死亡）
+
     if (stats.value.health <= 0) {
       handleDeath()
       return
     }
-    
-    // 根据年龄更新学历和财富
+
     updateYearlyStats()
-    
-    // 记录年度事件（包括大事件）
     recordYearlyEvent(yearlyEvent)
-    
-    // 检查是否达到游戏时间120年
+
     if (age.value >= 120) {
       handleDeath()
       return
     }
   }
-  
-  // 更新游戏状态
+
   emit('update:game-state', {
     currentDate: currentDate.value,
     age: age.value,
@@ -518,76 +537,88 @@ const nextYear = () => {
 
 // 生成年度事件
 const generateYearlyEvent = () => {
-  // 根据年龄生成不同的事件
-  let eventData
-  
-  if (age.value < 3) {
-    eventData = ageEvents.baby
-  } else if (age.value < 7) {
-    eventData = ageEvents.kindergarten
-  } else if (age.value < 13) {
-    eventData = ageEvents.elementary
-  } else if (age.value < 16) {
-    eventData = ageEvents.middle
-  } else if (age.value < 19) {
-    eventData = ageEvents.high
-  } else if (age.value < 23) {
-    eventData = ageEvents.college
-  } else if (age.value < 30) {
-    eventData = ageEvents.earlyCareer
-  } else if (age.value < 40) {
-    eventData = ageEvents.midCareer
-  } else if (age.value < 50) {
-    eventData = ageEvents.lateCareer
-  } else if (age.value < 60) {
-    eventData = ageEvents.preRetirement
-  } else if (age.value < 70) {
-    eventData = ageEvents.retirement
-  } else {
-    eventData = ageEvents.oldAge
+  // 使用统一函数获取年龄阶段事件
+  const ageEvent = getAgeEvent(age.value)
+  let content = ageEvent.content
+  let tags = [...ageEvent.tags]
+
+  // 如果是职业年龄(23-60)，有概率添加职业相关事件
+  const character = props.gameState.character
+  const professionId = character?.profession?.id
+  if (professionId && age.value >= 23 && age.value < 60 && Math.random() < 0.3) {
+    const professionEvent = getProfessionEvent(professionId)
+    content = professionEvent
+    tags.push('职业')
   }
-  
-  const content = eventData.content
-  const tags = eventData.tags
-  
+
+  // 天赋触发事件（低概率）
+  if (character?.talents && character.talents.length > 0) {
+    const talentEvents = getTalentEvents(character.talents)
+    if (talentEvents.length > 0) {
+      content = talentEvents[0]
+      tags.push('天赋')
+    }
+  }
+
+  // 根据性格调整心情
+  let moodModifier = 0
+  if (character?.personality?.id) {
+    const pId = character.personality.id
+    if (personalityEventModifiers[pId]) {
+      moodModifier = Math.random() < 0.5
+        ? personalityEventModifiers[pId].positive.length > 0 ? 1 : 0
+        : personalityEventModifiers[pId].negative.length > 0 ? -1 : 0
+    }
+  }
+
   // 随机生成天气和心情
   const weather = weathers[Math.floor(Math.random() * weathers.length)]
-  const mood = moods[Math.floor(Math.random() * moods.length)]
-  
+  const moodIndex = Math.max(0, Math.min(moods.length - 1, Math.floor(moods.length / 2) + moodModifier))
+  const mood = moods[moodIndex]
+
   // 生成重要大事件（人生转折、意外、重要事件）
   let bigEvent = null
   // 重要年龄段更容易发生大事件
-  const bigEventChance = age.value < 7 ? 0.02 : 
-                        age.value < 18 ? 0.05 : 
-                        age.value < 30 ? 0.1 : 
-                        age.value < 60 ? 0.08 : 0.05
-  
+  const bigEventChance = age.value < 7 ? 0.02 :
+                        age.value < 18 ? 0.05 :
+                        age.value < 30 ? 0.12 :
+                        age.value < 60 ? 0.1 : 0.06
+
   if (Math.random() < bigEventChance) {
     // 收集适合当前年龄的大事件
     const availableEvents = [...bigEvents.universal]
-    
+
     // 添加适合当前年龄的事件
     Object.keys(bigEvents.byAge).forEach(ageThreshold => {
       if (age.value >= parseInt(ageThreshold)) {
         availableEvents.push(...bigEvents.byAge[ageThreshold])
       }
     })
-    
+
+    // 职业相关大事件
+    if (professionId && bigEvents.professionBigEvents?.[professionId]) {
+      availableEvents.push(...bigEvents.professionBigEvents[professionId])
+    }
+
     if (availableEvents.length > 0) {
       bigEvent = availableEvents[Math.floor(Math.random() * availableEvents.length)]
     }
   }
-  
-  // 检查是否有历史大事
+
+  // 历史大事：出生年份、大寿年份、关键时间点100%触发
   const currentYear = parseDate(currentDate.value).getFullYear()
+  const birthYear = parseDate(props.gameState.birthDate || '1985年 6月 15日').getFullYear()
+  const isBirthYear = currentYear === birthYear
+  const isKeyAge = [18, 22, 30, 40, 50, 60, 70, 80, 90, 100].includes(age.value)
+
   if (historyEvents[currentYear]) {
     const historicalEvent = historyEvents[currentYear][Math.floor(Math.random() * historyEvents[currentYear].length)]
-    // 有20%的概率触发历史大事
-    if (Math.random() < 0.2) {
+    // 出生年份或关键年龄100%触发，否则20%概率
+    if (isBirthYear || isKeyAge || Math.random() < 0.2) {
       bigEvent = historicalEvent
     }
   }
-  
+
   return {
     content,
     tags,
@@ -678,31 +709,29 @@ const handleDeath = () => {
     },
     isYearly: true
   }
-  
-  // 添加死亡事件
+
   events.value.push(deathEvent)
-  
-  // 添加死亡事件到最近大事记
+
   recentEvents.value.unshift({
     id: deathEvent.id,
     date: deathEvent.date,
     title: `大事件：死亡`,
     content: deathEvent.content
   })
-  
-  // 更新游戏状态
+
+  // 设置游戏结束标志，并标记游戏未开始（刷新后回到首页）
   emit('update:game-state', {
     currentDate: currentDate.value,
     age: age.value,
     stats: stats.value,
     events: events.value,
-    realTimeDays: realTimeDays.value
+    realTimeDays: realTimeDays.value,
+    isGameStarted: false,
+    isGameEnded: true
   })
-  
-  // 记录人生到历史
+
   recordLife()
-  
-  // 跳转到结束页面
+  stopTimer()
   emit('set-page', 'EndPage')
 }
 
@@ -876,8 +905,12 @@ const stopTimer = () => {
 }
 
 onMounted(() => {
-  // 如果有保存的当前状态，恢复它
-  if (currentState.value.eventContent) {
+  // 检查是否是恢复之前的游戏状态（游戏正在进行且有保存的当前状态）
+  const isGameInProgress = props.gameState.isGameStarted && props.gameState.currentDate
+  const hasSavedState = currentState.value.eventContent
+
+  if (isGameInProgress && hasSavedState) {
+    // 恢复之前的游戏状态
     eventContent.value = currentState.value.eventContent
     eventTags.value = currentState.value.eventTags
     weather.value = currentState.value.weather
@@ -887,7 +920,7 @@ onMounted(() => {
     moodIcon.value = currentState.value.moodIcon
     bigEvent.value = currentState.value.bigEvent
   } else {
-    // 生成初始事件基于当前年龄
+    // 新游戏或状态不匹配，生成新的初始事件
     const yearlyEvent = generateYearlyEvent()
     eventContent.value = yearlyEvent.content
     eventTags.value = yearlyEvent.tags
@@ -897,7 +930,7 @@ onMounted(() => {
     mood.value = yearlyEvent.mood.name
     moodIcon.value = yearlyEvent.mood.icon
     bigEvent.value = yearlyEvent.bigEvent
-    
+
     // 保存当前状态
     currentState.value = {
       eventContent: yearlyEvent.content,
@@ -910,11 +943,11 @@ onMounted(() => {
       bigEvent: yearlyEvent.bigEvent
     }
   }
-  
+
   // 初始化数据
   const current = parseDate(currentDate.value)
   weekday.value = getWeekday(current)
-  
+
   // 启动定时器
   startTimer()
 })
@@ -949,17 +982,17 @@ const skipYears = (years) => {
 
 // 直接结束人生
 const skipToEnd = () => {
-  // 如果已经死亡或达到最大年龄，直接跳转
   if (stats.value.health <= 0 || age.value >= 120) {
+    emit('update:game-state', { isGameEnded: true })
     emit('set-page', 'EndPage')
     return
   }
-  
-  // 设置目标年龄为120岁（最大年龄）
+
   targetAge.value = 120
   accumulatedYears.value = 120 - age.value
-  
-  // 立即执行一次年份推进
+
+  // 先设置isGameEnded，这样nextYear完成后会正确处理
+  emit('update:game-state', { isGameEnded: true })
   nextYear()
 }
 
@@ -967,7 +1000,7 @@ const skipToEnd = () => {
 const recordLife = () => {
   const lifeRecord = {
     id: Date.now(),
-    birthDate: props.gameState.character?.birthDate || '1985年 6月 15日',
+    birthDate: props.gameState.birthDate || '1985年 6月 15日',
     deathDate: currentDate.value,
     age: age.value,
     events: events.value,

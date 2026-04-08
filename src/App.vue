@@ -1,9 +1,10 @@
 <template>
   <div class="app">
-    <component 
-      :is="currentPage" 
-      @next-page="nextPage" 
-      @prev-page="prevPage" 
+    <component
+      :is="currentPage"
+      :key="currentPageIndex"
+      @next-page="nextPage"
+      @prev-page="prevPage"
       @set-page="setPage"
       @update:game-state="handleDataFromChild"
       :game-state="gameState"
@@ -59,7 +60,7 @@ const loadGameState = () => {
     if (parsedState.isGameEnded) {
       // 清除已结束的游戏数据
       localStorage.removeItem('liveAnotherLife')
-      return
+      return // gameState 保持默认值，不跳转
     }
     gameState.value = parsedState
     // 如果游戏已经开始，直接跳转到主页面

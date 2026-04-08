@@ -209,18 +209,30 @@ const recordLife = () => {
     finalStats: props.gameState.stats,
     timestamp: new Date().toISOString()
   }
-  
+
   // 获取现有历史记录
   const historicalLives = JSON.parse(localStorage.getItem('historicalLives') || '[]')
-  
+
+  // 检查是否已经保存过（通过日期和年龄判断）
+  const alreadySaved = historicalLives.some(life =>
+    life.birthDate === lifeRecord.birthDate &&
+    life.deathDate === lifeRecord.deathDate &&
+    life.age === lifeRecord.age
+  )
+
+  // 如果已经保存过，不再重复添加
+  if (alreadySaved) {
+    return
+  }
+
   // 添加到历史记录
   historicalLives.unshift(lifeRecord)
-  
+
   // 只保留最近5个记录
   if (historicalLives.length > 5) {
     historicalLives.splice(5)
   }
-  
+
   // 保存到本地存储
   localStorage.setItem('historicalLives', JSON.stringify(historicalLives))
 }
@@ -230,11 +242,6 @@ const restartGame = () => {
   // 清除游戏状态
   emit('update:game-state', { clearGame: true })
 }
-
-onMounted(() => {
-  // 记录到历史
-  recordLife()
-})
 </script>
 
 <style scoped>
