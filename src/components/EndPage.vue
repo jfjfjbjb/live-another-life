@@ -1,7 +1,7 @@
 <template>
   <div class="container">
     <div class="header">
-      <h1>人生总结</h1>
+      <h1>GAME OVER</h1>
       <p class="subtitle">{{ birthDate }} — {{ deathDate }}</p>
     </div>
 
@@ -9,25 +9,25 @@
       <div class="portrait">{{ avatar }}</div>
       <div class="person-name">{{ name }}</div>
       <div class="person-dates">享年 {{ age }} 岁</div>
-      
+
       <div class="stats-grid">
         <div class="stat-box">
-          <div class="stat-icon">📝</div>
+          <div class="stat-icon">#</div>
           <div class="stat-num">{{ stats.events }}</div>
           <div class="stat-label">经历事件</div>
         </div>
         <div class="stat-box">
-          <div class="stat-icon">⭐</div>
+          <div class="stat-icon">*</div>
           <div class="stat-num">{{ stats.important }}</div>
           <div class="stat-label">重要时刻</div>
         </div>
         <div class="stat-box">
-          <div class="stat-icon">💰</div>
+          <div class="stat-icon">$</div>
           <div class="stat-num">¥{{ stats.wealth.toLocaleString() }}</div>
           <div class="stat-label">一生积蓄</div>
         </div>
         <div class="stat-box">
-          <div class="stat-icon">🏠</div>
+          <div class="stat-icon">@</div>
           <div class="stat-num">{{ stats.location }}</div>
           <div class="stat-label">最终住所</div>
         </div>
@@ -35,10 +35,10 @@
     </div>
 
     <div class="achievements">
-      <div class="section-title">🏆 成就达成</div>
+      <div class="section-title">* 成就达成</div>
       <div class="achievement-list">
-        <div 
-          v-for="achievement in achievements" 
+        <div
+          v-for="achievement in achievements"
           :key="achievement.id"
           class="achievement-item"
         >
@@ -52,9 +52,9 @@
     </div>
 
     <div class="timeline-brief">
-      <div class="section-title">📆 人生里程碑</div>
-      <div 
-        v-for="(milestone, index) in milestones" 
+      <div class="section-title">= 人生里程碑</div>
+      <div
+        v-for="(milestone, index) in milestones"
         :key="milestone.id"
         class="milestone"
       >
@@ -74,8 +74,8 @@
     </div>
 
     <div class="action-buttons">
-      <button class="btn btn-primary" @click="restartGame">🔄 再活一次</button>
-      <button class="btn btn-secondary">📤 分享人生</button>
+      <button class="btn btn-primary" @click="restartGame">+ 再活一次</button>
+      <button class="btn btn-secondary">> 分享人生</button>
     </div>
   </div>
 </template>
@@ -97,11 +97,11 @@ const name = computed(() => props.gameState.character?.name || '无名氏')
 const avatar = computed(() => {
   // 根据年龄选择头像
   const age = props.gameState.age || 0
-  if (age < 18) return '👶'
-  if (age < 30) return '👦'
-  if (age < 50) return '👨'
-  if (age < 70) return '👨‍🦳'
-  return '👴'
+  if (age < 18) return '[B]'
+  if (age < 30) return '[y]'
+  if (age < 50) return '[M]'
+  if (age < 70) return '[m]'
+  return '[O]'
 })
 
 const birthDate = computed(() => {
@@ -130,63 +130,63 @@ const stats = computed(() => {
 const achievements = computed(() => {
   const events = props.gameState.events || []
   const achievements = []
-  
+
   // 教育成就
-  const hasEducation = events.some(event => 
+  const hasEducation = events.some(event =>
     event.tags?.includes('学习') || event.education
   )
   if (hasEducation) {
     achievements.push({
       id: 1,
-      icon: '🎓',
+      icon: 'i',
       name: '学有所成',
       description: '完成了学业教育'
     })
   }
-  
+
   // 工作成就
-  const hasWork = events.some(event => 
+  const hasWork = events.some(event =>
     event.tags?.includes('工作') || event.tags?.includes('事业')
   )
   if (hasWork) {
     achievements.push({
       id: 2,
-      icon: '💼',
+      icon: 'ii',
       name: '事业有成',
       description: '拥有了自己的职业生涯'
     })
   }
-  
+
   // 家庭成就
-  const hasFamily = events.some(event => 
+  const hasFamily = events.some(event =>
     event.tags?.includes('家庭') || event.bigEvent?.title === '结婚'
   )
   if (hasFamily) {
     achievements.push({
       id: 3,
-      icon: '👨‍👩‍👧',
+      icon: 'iii',
       name: '家庭美满',
       description: '建立了幸福的家庭'
     })
   }
-  
+
   // 长寿成就
   if (age.value >= 70) {
     achievements.push({
       id: 4,
-      icon: '🏥',
+      icon: 'iv',
       name: '福寿双全',
       description: `享年${age.value}岁，寿终正寝`
     })
   }
-  
+
   return achievements
 })
 
 const milestones = computed(() => {
   const events = props.gameState.events || []
   const bigEvents = events.filter(event => event.bigEvent)
-  
+
   return bigEvents.slice(-4).map((event, index) => ({
     id: event.id,
     year: event.date?.match(/(\d+)年/)?.[1] || '',
@@ -256,17 +256,15 @@ const restartGame = () => {
 .header {
   text-align: center;
   padding: 32px 20px;
-  background: linear-gradient(135deg, var(--primary), #A0522D);
-  border-radius: 20px;
-  color: white;
+  background: var(--card-bg);
+  border: 4px solid var(--pixel-border);
+  color: var(--text);
   position: relative;
   overflow: hidden;
   animation: fadeInUp 0.5s ease-out;
-}
-
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(30px); }
-  to { opacity: 1; transform: translateY(0); }
+  box-shadow:
+    inset -4px -4px 0px rgba(0, 0, 0, 0.3),
+    inset 4px 4px 0px rgba(255, 255, 255, 0.1);
 }
 
 .header::before {
@@ -275,44 +273,71 @@ const restartGame = () => {
   top: 0;
   left: 0;
   right: 0;
-  bottom: 0;
-  background: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 20.5V18H0v-2h20v-2H0v-2h20v-2H0V8h20V6H0V4h20V2H0V0h22v20h2V0h2v20h2V0h2v20h2v2H22v2h18v2H22v2h18v2H22v2h18v2H22v-2zM2 20v2h2v-2H2zm4 0v2h2v-2H6zm4 0v2h2v-2h-2zm4 0v2h2v-2h-2zm4 0v2h2v-2h-2zm4 0v2h2v-2h-2z' fill='%23FFFFFF' fill-opacity='0.05'/%3E%3C/svg%3E");
-  opacity: 0.5;
+  height: 4px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--accent),
+    var(--accent) 16px,
+    var(--gold) 16px,
+    var(--gold) 32px
+  );
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .header h1 {
-  font-size: 32px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 20px;
+  color: var(--accent);
   margin-bottom: 8px;
-  position: relative;
+  text-shadow:
+    4px 4px 0 var(--primary),
+    -2px -2px 0 var(--gold);
+  animation: gameOverPulse 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes gameOverPulse {
+  from { transform: scale(1); }
+  to { transform: scale(1.02); }
 }
 
 .header .subtitle {
-  font-size: 14px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  color: var(--text-dim);
   opacity: 0.9;
-  position: relative;
 }
 
 .life-summary {
   background: var(--card-bg);
-  border-radius: 20px;
+  border: 4px solid var(--pixel-border);
   padding: 24px;
-  box-shadow: var(--shadow);
   text-align: center;
   animation: fadeInUp 0.5s ease-out 0.1s both;
+  box-shadow:
+    inset -4px -4px 0px rgba(0, 0, 0, 0.3),
+    inset 4px 4px 0px rgba(255, 255, 255, 0.1);
 }
 
 .portrait {
-  width: 100px;
-  height: 100px;
-  background: linear-gradient(135deg, #E8D5C4, #D4A574);
-  border-radius: 50%;
+  width: 80px;
+  height: 80px;
+  background: var(--bg);
+  border: 4px solid var(--pixel-border);
   margin: 0 auto 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 48px;
-  box-shadow: 0 6px 20px rgba(139, 69, 19, 0.25);
-  transition: transform 0.3s ease;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 24px;
+  color: var(--gold);
+  box-shadow:
+    inset -4px -4px 0px rgba(0, 0, 0, 0.3),
+    inset 4px 4px 0px rgba(255, 255, 255, 0.1);
+  transition: transform 0.1s;
 }
 
 .portrait:hover {
@@ -320,15 +345,16 @@ const restartGame = () => {
 }
 
 .person-name {
-  font-size: 24px;
-  color: var(--primary);
-  font-weight: 700;
-  margin-bottom: 4px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 14px;
+  color: var(--gold);
+  margin-bottom: 8px;
 }
 
 .person-dates {
-  font-size: 13px;
-  color: var(--secondary);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  color: var(--text-dim);
   margin-bottom: 20px;
 }
 
@@ -340,48 +366,53 @@ const restartGame = () => {
 
 .stat-box {
   background: var(--bg);
-  border-radius: 14px;
-  padding: 16px;
+  border: 3px solid var(--pixel-border);
+  padding: 14px;
   text-align: center;
-  transition: transform 0.2s ease;
+  transition: all 0.1s;
 }
 
 .stat-box:hover {
-  transform: translateY(-2px);
+  border-color: var(--gold);
 }
 
 .stat-icon {
-  font-size: 24px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 16px;
+  color: var(--accent2);
   margin-bottom: 8px;
 }
 
 .stat-num {
-  font-size: 24px;
-  color: var(--primary);
-  font-weight: 700;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 12px;
+  color: var(--gold);
+  margin-bottom: 4px;
 }
 
 .stat-label {
-  font-size: 11px;
-  color: var(--secondary);
-  margin-top: 4px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 6px;
+  color: var(--text-dim);
 }
 
 .achievements {
   background: var(--card-bg);
-  border-radius: 20px;
+  border: 4px solid var(--pixel-border);
   padding: 24px;
-  box-shadow: var(--shadow);
   animation: fadeInUp 0.5s ease-out 0.2s both;
+  box-shadow:
+    inset -4px -4px 0px rgba(0, 0, 0, 0.3),
+    inset 4px 4px 0px rgba(255, 255, 255, 0.1);
 }
 
 .section-title {
-  font-size: 14px;
-  color: var(--accent);
-  text-transform: uppercase;
-  letter-spacing: 2px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  color: var(--gold);
   margin-bottom: 16px;
   text-align: center;
+  letter-spacing: 2px;
 }
 
 .achievement-list {
@@ -395,18 +426,20 @@ const restartGame = () => {
   align-items: center;
   gap: 12px;
   padding: 12px;
-  background: linear-gradient(135deg, #FFF9F0, #FFF5E6);
-  border-radius: 12px;
-  border-left: 3px solid var(--accent);
-  transition: all 0.2s ease;
+  background: var(--bg);
+  border-left: 4px solid var(--accent2);
+  transition: all 0.1s;
 }
 
 .achievement-item:hover {
   transform: translateX(4px);
+  border-left-color: var(--gold);
 }
 
 .achievement-icon {
-  font-size: 24px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 14px;
+  color: var(--gold);
 }
 
 .achievement-text {
@@ -414,22 +447,26 @@ const restartGame = () => {
 }
 
 .achievement-name {
-  font-size: 13px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
   color: var(--text);
-  font-weight: 700;
+  margin-bottom: 4px;
 }
 
 .achievement-desc {
   font-size: 11px;
-  color: var(--secondary);
+  color: var(--text-dim);
+  font-family: 'Noto Sans SC', monospace;
 }
 
 .timeline-brief {
   background: var(--card-bg);
-  border-radius: 20px;
+  border: 4px solid var(--pixel-border);
   padding: 24px;
-  box-shadow: var(--shadow);
   animation: fadeInUp 0.5s ease-out 0.3s both;
+  box-shadow:
+    inset -4px -4px 0px rgba(0, 0, 0, 0.3),
+    inset 4px 4px 0px rgba(255, 255, 255, 0.1);
 }
 
 .milestone {
@@ -445,26 +482,26 @@ const restartGame = () => {
   left: 11px;
   top: 24px;
   bottom: -14px;
-  width: 2px;
-  background: var(--secondary);
-  opacity: 0.3;
+  width: 4px;
+  background: var(--pixel-border);
 }
 
 .milestone-year {
   width: 24px;
   height: 24px;
-  background: var(--secondary);
-  border-radius: 50%;
+  background: var(--accent2);
+  border: 3px solid var(--pixel-border);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 10px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
   color: white;
   flex-shrink: 0;
   transition: transform 0.2s ease;
 }
 
-.milestone:nth-child(2) .milestone-year { background: #4CAF50; }
+.milestone:nth-child(2) .milestone-year { background: var(--green); }
 .milestone:nth-child(3) .milestone-year { background: #2196F3; }
 .milestone:nth-child(4) .milestone-year { background: var(--accent); }
 
@@ -477,24 +514,25 @@ const restartGame = () => {
 }
 
 .milestone-title {
-  font-size: 13px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
   color: var(--text);
-  font-weight: 700;
+  margin-bottom: 4px;
 }
 
 .milestone-desc {
   font-size: 11px;
-  color: var(--secondary);
-  margin-top: 2px;
+  color: var(--text-dim);
+  font-family: 'Noto Sans SC', monospace;
 }
 
 .final-stats {
-  background: linear-gradient(135deg, #FFF9F0, #FFE8D6);
-  border-radius: 16px;
+  background: var(--bg);
+  border: 4px solid var(--pixel-border);
   padding: 20px;
   text-align: center;
-  border: 2px solid var(--secondary);
   animation: fadeInUp 0.5s ease-out 0.4s both;
+  box-shadow: inset 4px 4px 0 rgba(0,0,0,0.3);
 }
 
 .final-quote {
@@ -503,11 +541,13 @@ const restartGame = () => {
   font-style: italic;
   line-height: 1.8;
   margin-bottom: 12px;
+  font-family: 'Noto Sans SC', monospace;
 }
 
 .final-author {
-  font-size: 12px;
-  color: var(--secondary);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  color: var(--text-dim);
 }
 
 .action-buttons {
@@ -519,10 +559,10 @@ const restartGame = () => {
 .btn {
   width: 100%;
   padding: 16px 24px;
-  font-size: 16px;
-  border-radius: 30px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 12px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.1s;
   text-align: center;
 }
 
@@ -531,25 +571,33 @@ const restartGame = () => {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--accent), #DC143C);
+  background: var(--accent);
   color: white;
   border: none;
-  box-shadow: 0 6px 20px rgba(196, 30, 58, 0.35);
+  box-shadow:
+    inset -4px -4px 0px rgba(0, 0, 0, 0.3),
+    inset 4px 4px 0px rgba(255, 255, 255, 0.2),
+    0 4px 0 0 var(--primary);
 }
 
 .btn-primary:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 10px 30px rgba(196, 30, 58, 0.45);
+  transform: translate(-2px, -2px);
+  box-shadow:
+    inset -4px -4px 0px rgba(0, 0, 0, 0.3),
+    inset 4px 4px 0px rgba(255, 255, 255, 0.2),
+    0 4px 0 0 var(--primary),
+    4px 4px 0 0 var(--pixel-border);
 }
 
 .btn-secondary {
   background: transparent;
-  color: var(--primary);
-  border: 2px solid var(--primary);
+  color: var(--text);
+  border: 4px solid var(--pixel-border);
+  box-shadow: inset -4px -4px 0px rgba(0, 0, 0, 0.3);
 }
 
 .btn-secondary:hover {
-  background: var(--primary);
+  background: var(--pixel-border);
   color: white;
 }
 </style>

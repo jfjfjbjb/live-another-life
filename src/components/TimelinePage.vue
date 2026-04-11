@@ -3,11 +3,11 @@
     <div class="header">
       <div class="header-top">
         <button class="back-btn" @click="$emit('set-page', 'LifePage')"><</button>
-        <h1>📝 大事记</h1>
+        <h1># 大事记</h1>
         <div class="header-placeholder"></div>
       </div>
       <p class="header-sub">记录人生的每一个重要时刻</p>
-      
+
       <div class="stats-row">
         <div class="stat-box">
           <div class="stat-num">{{ stats.totalEvents }}</div>
@@ -25,8 +25,8 @@
     </div>
 
     <div class="timeline">
-      <div 
-        v-for="event in allEvents" 
+      <div
+        v-for="event in allEvents"
         :key="event.id"
         class="timeline-item"
         :class="{ important: event.important }"
@@ -34,13 +34,13 @@
       >
         <div class="item-header">
           <span class="item-date">{{ event.date }} · {{ event.age }}岁</span>
-          <span class="item-star" @click.stop="toggleImportant(event.id)">{{ event.important ? '⭐' : '☆' }}</span>
+          <span class="item-star" @click.stop="toggleImportant(event.id)">{{ event.important ? '*' : '-' }}</span>
         </div>
         <div class="item-title">{{ event.bigEvent ? '大事件：' + event.bigEvent.title : event.title }}</div>
         <div class="item-preview">{{ event.bigEvent ? event.bigEvent.description : event.content }}</div>
         <div class="item-tags">
-          <span 
-            v-for="tag in event.tags" 
+          <span
+            v-for="tag in event.tags"
             :key="tag"
             class="item-tag"
           >{{ tag }}</span>
@@ -57,7 +57,7 @@
       <div class="event-detail-content" @click.stop>
         <div class="event-detail-header">
           <h2>{{ selectedEvent.bigEvent ? '大事件：' + selectedEvent.bigEvent.title : selectedEvent.title }}</h2>
-          <button class="close-btn" @click="closeEventDetail">×</button>
+          <button class="close-btn" @click="closeEventDetail">X</button>
         </div>
         <div class="event-detail-meta">
           <span>{{ selectedEvent.date }}</span>
@@ -68,8 +68,8 @@
         </div>
         <div class="event-detail-footer">
           <div class="event-detail-tags">
-            <span 
-              v-for="tag in selectedEvent.tags" 
+            <span
+              v-for="tag in selectedEvent.tags"
               :key="tag"
               class="detail-tag"
             >{{ tag }}</span>
@@ -171,10 +171,12 @@ onMounted(() => {
 
 .header {
   background: var(--card-bg);
-  border-radius: 20px;
+  border: 4px solid var(--pixel-border);
   padding: 20px;
-  box-shadow: var(--shadow);
   text-align: center;
+  box-shadow:
+    inset -4px -4px 0px rgba(0, 0, 0, 0.3),
+    inset 4px 4px 0px rgba(255, 255, 255, 0.1);
 }
 
 .header-top {
@@ -185,35 +187,38 @@ onMounted(() => {
 }
 
 .back-btn {
-  padding: 6px 12px;
-  background: linear-gradient(135deg, var(--secondary), #E8C9A8);
-  color: var(--primary);
-  border: none;
-  border-radius: 12px;
+  font-family: 'Press Start 2P', monospace;
   font-size: 12px;
+  padding: 8px 12px;
+  background: var(--bg);
+  color: var(--text);
+  border: 3px solid var(--pixel-border);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.1s;
+  box-shadow: inset -2px -2px 0 rgba(0,0,0,0.3);
 }
 
 .back-btn:hover {
-  transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(139, 69, 19, 0.2);
+  border-color: var(--gold);
+  color: var(--gold);
 }
 
 .header-placeholder {
-  width: 100px;
+  width: 60px;
 }
 
 .header h1 {
-  font-size: 20px;
-  color: var(--primary);
-  font-weight: 700;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 12px;
+  color: var(--gold);
   margin: 0;
+  text-shadow: 2px 2px 0 var(--primary);
 }
 
 .header-sub {
-  font-size: 12px;
-  color: var(--secondary);
+  font-size: 11px;
+  color: var(--text-dim);
+  font-family: 'Noto Sans SC', monospace;
 }
 
 .stats-row {
@@ -225,147 +230,88 @@ onMounted(() => {
 
 .stat-box {
   background: var(--bg);
-  border-radius: 12px;
+  border: 3px solid var(--pixel-border);
   padding: 12px 8px;
   text-align: center;
-  transition: transform 0.2s ease;
+  transition: all 0.1s;
 }
 
 .stat-box:hover {
-  transform: translateY(-2px);
+  border-color: var(--gold);
 }
 
 .stat-num {
-  font-size: 20px;
-  color: var(--primary);
-  font-weight: 700;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 14px;
+  color: var(--gold);
+  margin-bottom: 4px;
 }
 
 .stat-label {
-  font-size: 10px;
-  color: var(--secondary);
-  margin-top: 4px;
-}
-
-.filter-bar {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding: 4px 0;
-}
-
-.filter-bar::-webkit-scrollbar {
-  display: none;
-}
-
-.filter-item {
-  padding: 8px 16px;
-  background: var(--card-bg);
-  border-radius: 20px;
-  font-size: 12px;
-  color: var(--text);
-  white-space: nowrap;
-  cursor: pointer;
-  border: 1px solid transparent;
-  transition: all 0.2s;
-}
-
-.filter-item:active {
-  transform: scale(0.95);
-}
-
-.filter-item.active {
-  background: var(--primary);
-  color: white;
-  border-color: var(--primary);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 6px;
+  color: var(--text-dim);
 }
 
 .timeline {
   position: relative;
-  padding-left: 24px;
+  padding-left: 20px;
 }
 
 .timeline::before {
   content: '';
   position: absolute;
-  left: 8px;
+  left: 6px;
   top: 0;
   bottom: 0;
-  width: 2px;
-  background: linear-gradient(180deg, var(--secondary), var(--primary), var(--secondary));
-}
-
-.timeline-year {
-  font-size: 16px;
-  color: var(--primary);
-  margin: 20px 0 12px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 700;
-}
-
-.timeline-year::before {
-  content: '';
-  position: absolute;
-  left: 4px;
-  width: 10px;
-  height: 10px;
-  background: var(--accent);
-  border-radius: 50%;
-  border: 2px solid var(--bg);
+  width: 4px;
+  background: repeating-linear-gradient(
+    180deg,
+    var(--pixel-border),
+    var(--pixel-border) 8px,
+    var(--secondary) 8px,
+    var(--secondary) 16px
+  );
 }
 
 .timeline-item {
   background: var(--card-bg);
-  border-radius: 14px;
-  padding: 16px;
-  margin-bottom: 16px;
-  box-shadow: 0 4px 12px rgba(139, 69, 19, 0.08);
+  border: 4px solid var(--pixel-border);
+  padding: 14px;
+  margin-bottom: 12px;
   position: relative;
   cursor: pointer;
-  transition: all 0.2s;
-}
-
-.container {
-  width: 100%;
-  max-width: 400px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  padding: 16px;
-  animation: fadeInUp 0.4s ease-out;
+  transition: all 0.1s;
+  box-shadow:
+    inset -4px -4px 0px rgba(0, 0, 0, 0.3),
+    inset 4px 4px 0px rgba(255, 255, 255, 0.1);
 }
 
 .timeline-item:hover {
   transform: translateX(4px);
-  box-shadow: 0 6px 16px rgba(139, 69, 19, 0.12);
-}
-
-.timeline-item:active {
-  transform: translateX(2px) scale(0.99);
+  border-color: var(--accent2);
 }
 
 .timeline-item::before {
   content: '';
   position: absolute;
-  left: -20px;
-  top: 20px;
-  width: 10px;
-  height: 10px;
-  background: var(--secondary);
-  border-radius: 50%;
-  border: 2px solid var(--bg);
+  left: -18px;
+  top: 16px;
+  width: 12px;
+  height: 12px;
+  background: var(--bg);
+  border: 4px solid var(--pixel-border);
 }
 
 .timeline-item.important::before {
   background: var(--accent);
-  animation: starPulse 2s ease-in-out infinite;
+  border-color: var(--accent);
+  animation: starPulse 1s ease-in-out infinite;
 }
 
 @keyframes starPulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(196, 30, 58, 0.4); }
-  50% { box-shadow: 0 0 8px 2px rgba(196, 30, 58, 0.3); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(232, 74, 95, 0.4); }
+  50% { box-shadow: 0 0 8px 2px rgba(232, 74, 95, 0.5); }
 }
 
 .item-header {
@@ -376,14 +322,17 @@ onMounted(() => {
 }
 
 .item-date {
-  font-size: 12px;
-  color: var(--secondary);
+  font-size: 10px;
+  color: var(--text-dim);
+  font-family: 'Noto Sans SC', monospace;
 }
 
 .item-star {
-  font-size: 14px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 12px;
   cursor: pointer;
-  transition: transform 0.2s ease;
+  color: var(--gold);
+  transition: transform 0.1s;
 }
 
 .item-star:active {
@@ -391,21 +340,22 @@ onMounted(() => {
 }
 
 .item-title {
-  font-size: 14px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
   color: var(--text);
-  font-weight: 700;
+  font-weight: bold;
   margin-bottom: 6px;
 }
 
 .item-preview {
   font-size: 12px;
-  color: var(--text);
-  opacity: 0.7;
+  color: var(--text-dim);
   line-height: 1.5;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  font-family: 'Noto Sans SC', monospace;
 }
 
 .item-tags {
@@ -419,9 +369,9 @@ onMounted(() => {
   font-size: 10px;
   padding: 3px 8px;
   background: var(--bg);
-  border-radius: 10px;
-  color: var(--primary);
-  transition: transform 0.2s ease;
+  border: 2px solid var(--pixel-border);
+  color: var(--accent2);
+  font-family: 'Noto Sans SC', monospace;
 }
 
 .item-tag:active {
@@ -429,8 +379,10 @@ onMounted(() => {
 }
 
 .item-mood {
-  font-size: 12px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
   margin-left: auto;
+  color: var(--gold);
 }
 
 /* 大事件详情弹窗样式 */
@@ -440,7 +392,7 @@ onMounted(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.85);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -455,13 +407,16 @@ onMounted(() => {
 
 .event-detail-content {
   background: var(--card-bg);
-  border-radius: 20px;
+  border: 4px solid var(--pixel-border);
   padding: 24px;
   max-width: 90%;
   width: 360px;
   max-height: 80vh;
   overflow-y: auto;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  box-shadow:
+    inset -4px -4px 0px rgba(0, 0, 0, 0.3),
+    inset 4px 4px 0px rgba(255, 255, 255, 0.1),
+    0 0 40px rgba(232, 74, 95, 0.3);
   animation: slideIn 0.3s ease;
 }
 
@@ -476,36 +431,35 @@ onMounted(() => {
   align-items: flex-start;
   margin-bottom: 16px;
   padding-bottom: 12px;
-  border-bottom: 1px dashed rgba(139, 69, 19, 0.15);
+  border-bottom: 4px solid var(--pixel-border);
 }
 
 .event-detail-header h2 {
-  font-size: 18px;
-  color: var(--primary);
-  font-weight: 700;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  color: var(--gold);
   margin: 0;
   flex: 1;
+  line-height: 1.5;
 }
 
 .close-btn {
-  background: none;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 12px;
+  background: var(--accent);
+  color: white;
   border: none;
-  font-size: 24px;
-  color: var(--secondary);
   cursor: pointer;
-  padding: 0;
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
-  transition: all 0.2s ease;
+  box-shadow: inset -2px -2px 0 rgba(0,0,0,0.3);
 }
 
 .close-btn:hover {
-  background: var(--bg);
-  color: var(--primary);
+  background: var(--accent2);
 }
 
 .event-detail-meta {
@@ -513,7 +467,8 @@ onMounted(() => {
   gap: 16px;
   margin-bottom: 16px;
   font-size: 12px;
-  color: var(--secondary);
+  color: var(--text-dim);
+  font-family: 'Noto Sans SC', monospace;
 }
 
 .event-detail-description {
@@ -522,6 +477,7 @@ onMounted(() => {
   color: var(--text);
   margin-bottom: 20px;
   white-space: pre-wrap;
+  font-family: 'Noto Sans SC', monospace;
 }
 
 .event-detail-footer {
@@ -529,7 +485,7 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   padding-top: 16px;
-  border-top: 1px dashed rgba(139, 69, 19, 0.15);
+  border-top: 4px solid var(--pixel-border);
 }
 
 .event-detail-tags {
@@ -542,12 +498,24 @@ onMounted(() => {
   font-size: 10px;
   padding: 3px 8px;
   background: var(--bg);
-  border-radius: 10px;
-  color: var(--primary);
+  border: 2px solid var(--pixel-border);
+  color: var(--accent2);
+  font-family: 'Noto Sans SC', monospace;
 }
 
 .event-detail-mood {
-  font-size: 16px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 14px;
+  color: var(--gold);
 }
 
+.no-events {
+  text-align: center;
+  padding: 24px;
+  color: var(--text-dim);
+  font-size: 14px;
+  background: var(--card-bg);
+  border: 4px solid var(--pixel-border);
+  font-family: 'Noto Sans SC', monospace;
+}
 </style>

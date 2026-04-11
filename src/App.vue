@@ -151,14 +151,25 @@ onMounted(() => {
 </script>
 
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+SC:wght@400;700&display=swap');
+
 :root {
-  --primary: #8B4513;
-  --secondary: #D4A574;
-  --accent: #C41E3A;
-  --bg: #F5F0E6;
-  --text: #2C1810;
-  --card-bg: rgba(255, 255, 255, 0.95);
-  --shadow: 0 8px 32px rgba(139, 69, 19, 0.2);
+  /* Pixel Art Color Palette */
+  --primary: #5D4E37;
+  --secondary: #C4A574;
+  --accent: #E84A5F;
+  --accent2: #2EC4B6;
+  --bg: #1A1A2E;
+  --bg2: #16213E;
+  --card-bg: #0F3460;
+  --text: #EAEAEA;
+  --text-dim: #8B8B8B;
+  --gold: #FFD93D;
+  --green: #6BCB77;
+  --health: #FF6B6B;
+  --pixel-border: #2A2A4A;
+  --shadow: 0 0 0 4px var(--primary);
+  --glow: 0 0 20px rgba(232, 74, 95, 0.5);
 }
 
 * {
@@ -168,10 +179,31 @@ onMounted(() => {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", "Segoe UI", Arial, sans-serif;
+  font-family: 'Noto Sans SC', 'Press Start 2P', monospace;
   background: var(--bg);
   min-height: 100vh;
   color: var(--text);
+  image-rendering: pixelated;
+  -webkit-font-smoothing: none;
+}
+
+/* Scanline effect */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.15),
+    rgba(0, 0, 0, 0.15) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  pointer-events: none;
+  z-index: 9999;
 }
 
 .app {
@@ -180,5 +212,130 @@ body {
   margin: 0 auto;
   min-height: 100vh;
   padding: 16px;
+  position: relative;
+}
+
+/* Pixel button base style */
+.pixel-btn {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  padding: 12px 20px;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.1s;
+  text-transform: uppercase;
+}
+
+.pixel-btn-primary {
+  background: var(--accent);
+  color: white;
+  box-shadow:
+    inset -4px -4px 0px rgba(0, 0, 0, 0.3),
+    inset 4px 4px 0px rgba(255, 255, 255, 0.2),
+    0 0 0 4px var(--primary);
+}
+
+.pixel-btn-primary:hover {
+  transform: translate(-2px, -2px);
+  box-shadow:
+    inset -4px -4px 0px rgba(0, 0, 0, 0.3),
+    inset 4px 4px 0px rgba(255, 255, 255, 0.2),
+    0 0 0 4px var(--primary),
+    0 4px 0 4px var(--primary);
+}
+
+.pixel-btn-primary:active {
+  transform: translate(2px, 2px);
+  box-shadow:
+    inset 4px 4px 0px rgba(0, 0, 0, 0.3),
+    inset -4px -4px 0px rgba(255, 255, 255, 0.2),
+    0 0 0 4px var(--primary);
+}
+
+.pixel-btn-secondary {
+  background: var(--card-bg);
+  color: var(--text);
+  box-shadow:
+    inset -4px -4px 0px rgba(0, 0, 0, 0.3),
+    inset 4px 4px 0px rgba(255, 255, 255, 0.1),
+    0 0 0 4px var(--pixel-border);
+}
+
+.pixel-btn-secondary:hover {
+  background: var(--bg2);
+  transform: translate(-2px, -2px);
+  box-shadow:
+    inset -4px -4px 0px rgba(0, 0, 0, 0.3),
+    inset 4px 4px 0px rgba(255, 255, 255, 0.1),
+    0 0 0 4px var(--pixel-border),
+    0 4px 0 4px var(--pixel-border);
+}
+
+.pixel-btn-secondary:active {
+  transform: translate(2px, 2px);
+  box-shadow:
+    inset 4px 4px 0px rgba(0, 0, 0, 0.3),
+    inset -4px -4px 0px rgba(255, 255, 255, 0.1),
+    0 0 0 4px var(--pixel-border);
+}
+
+/* Pixel card base style */
+.pixel-card {
+  background: var(--card-bg);
+  border: 4px solid var(--pixel-border);
+  position: relative;
+  image-rendering: pixelated;
+}
+
+.pixel-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--accent),
+    var(--accent) 8px,
+    var(--gold) 8px,
+    var(--gold) 16px
+  );
+}
+
+/* Pixel input style */
+.pixel-input {
+  font-family: 'Noto Sans SC', monospace;
+  font-size: 14px;
+  padding: 12px 16px;
+  background: var(--bg);
+  border: 4px solid var(--pixel-border);
+  color: var(--text);
+  width: 100%;
+  outline: none;
+}
+
+.pixel-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(232, 74, 95, 0.3);
+}
+
+.pixel-input::placeholder {
+  color: var(--text-dim);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--pixel-border);
+  border: 2px solid var(--bg);
 }
 </style>

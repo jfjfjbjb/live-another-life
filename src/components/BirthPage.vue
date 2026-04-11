@@ -17,7 +17,7 @@
 
     <div class="card">
       <p class="section-title">穿越到哪一天</p>
-      
+
       <div class="date-display">
         <div class="date-text">{{ selectedYear }}年 {{ selectedMonth }}月 {{ selectedDay }}日</div>
         <div class="date-label">{{ weekday }} · {{ lunarDate }}</div>
@@ -25,12 +25,12 @@
 
       <div class="form-group">
         <label class="form-label">姓名</label>
-        <input type="text" v-model="userName" class="form-input" placeholder="请输入您的姓名">
+        <input type="text" v-model="userName" class="pixel-input" placeholder="请输入您的姓名">
       </div>
 
       <div class="form-group">
         <label class="form-label">出生地</label>
-        <input type="text" v-model="birthPlace" class="form-input" placeholder="请输入您的出生地">
+        <input type="text" v-model="birthPlace" class="pixel-input" placeholder="请输入您的出生地">
       </div>
 
       <div class="selector-group">
@@ -39,8 +39,8 @@
           <div class="selector">
             <div class="selector-highlight"></div>
             <div class="selector-scroll" ref="yearScroll">
-              <div 
-                v-for="year in years" 
+              <div
+                v-for="year in years"
                 :key="year"
                 class="selector-item-inner"
                 :class="{ active: selectedYear === year }"
@@ -55,8 +55,8 @@
           <div class="selector">
             <div class="selector-highlight"></div>
             <div class="selector-scroll" ref="monthScroll">
-              <div 
-                v-for="month in months" 
+              <div
+                v-for="month in months"
                 :key="month"
                 class="selector-item-inner"
                 :class="{ active: selectedMonth === month }"
@@ -71,8 +71,8 @@
           <div class="selector">
             <div class="selector-highlight"></div>
             <div class="selector-scroll" ref="dayScroll">
-              <div 
-                v-for="day in days" 
+              <div
+                v-for="day in days"
                 :key="day"
                 class="selector-item-inner"
                 :class="{ active: selectedDay === day }"
@@ -85,7 +85,7 @@
 
       <div class="history-event">
         <div class="history-event-title">
-          <span>📜</span> 历史上的今天
+          <span>#</span> 历史上的今天
         </div>
         <div class="history-event-content">
           {{ historyEvent }}
@@ -244,17 +244,20 @@ watch(() => props.gameState, (newState) => {
 }
 
 .header h1 {
-  font-size: 26px;
-  color: var(--primary);
-  font-weight: 600;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 14px;
+  color: var(--gold);
+  text-shadow: 2px 2px 0 var(--primary);
 }
 
 .card {
   background: var(--card-bg);
-  border-radius: 20px;
+  border: 4px solid var(--pixel-border);
   padding: 28px 24px;
-  box-shadow: var(--shadow);
   position: relative;
+  box-shadow:
+    inset -4px -4px 0px rgba(0, 0, 0, 0.3),
+    inset 4px 4px 0px rgba(255, 255, 255, 0.1);
 }
 
 .card::before {
@@ -264,51 +267,45 @@ watch(() => props.gameState, (newState) => {
   left: 50%;
   transform: translateX(-50%);
   width: 60%;
-  height: 3px;
-  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  height: 4px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--accent),
+    var(--accent) 8px,
+    var(--gold) 8px,
+    var(--gold) 16px
+  );
 }
 
 .section-title {
-  font-size: 13px;
-  color: var(--secondary);
-  text-transform: uppercase;
-  letter-spacing: 3px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  color: var(--accent2);
+  letter-spacing: 2px;
   margin-bottom: 20px;
   text-align: center;
 }
 
 .date-display {
-  background: linear-gradient(135deg, #FAF6F0, #F0E6D8);
-  border-radius: 16px;
+  background: var(--bg);
   padding: 24px;
   text-align: center;
   margin-bottom: 24px;
-  border: 2px solid var(--secondary);
-  position: relative;
+  border: 4px solid var(--pixel-border);
+  box-shadow: inset 4px 4px 0 rgba(0,0,0,0.3);
 }
-
-.date-display::before,
-.date-display::after {
-  content: '❖';
-  position: absolute;
-  color: var(--secondary);
-  font-size: 12px;
-  opacity: 0.5;
-}
-
-.date-display::before { top: 8px; left: 12px; }
-.date-display::after { bottom: 8px; right: 12px; }
 
 .date-text {
-  font-size: 32px;
-  color: var(--primary);
-  font-weight: 700;
-  margin-bottom: 4px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 14px;
+  color: var(--gold);
+  margin-bottom: 8px;
 }
 
 .date-label {
   font-size: 12px;
-  color: var(--secondary);
+  color: var(--text-dim);
+  font-family: 'Noto Sans SC', monospace;
 }
 
 .selector-group {
@@ -323,20 +320,20 @@ watch(() => props.gameState, (newState) => {
 }
 
 .selector-label {
-  font-size: 11px;
-  color: var(--secondary);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  color: var(--accent2);
   margin-bottom: 8px;
   text-transform: uppercase;
-  letter-spacing: 2px;
 }
 
 .selector {
   position: relative;
   height: 120px;
   overflow: hidden;
-  border-radius: 12px;
   background: var(--bg);
-  border: 1px solid rgba(139, 69, 19, 0.2);
+  border: 4px solid var(--pixel-border);
+  box-shadow: inset 4px 4px 0 rgba(0,0,0,0.3);
 }
 
 .selector-scroll {
@@ -348,7 +345,16 @@ watch(() => props.gameState, (newState) => {
 }
 
 .selector-scroll::-webkit-scrollbar {
-  display: none;
+  width: 8px;
+}
+
+.selector-scroll::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+
+.selector-scroll::-webkit-scrollbar-thumb {
+  background: var(--pixel-border);
+  border: 2px solid var(--bg);
 }
 
 .selector-item-inner {
@@ -357,19 +363,21 @@ watch(() => props.gameState, (newState) => {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s;
-  font-size: 16px;
+  transition: all 0.1s;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 12px;
   color: var(--text);
 }
 
 .selector-item-inner:hover {
-  background: rgba(139, 69, 19, 0.05);
+  background: rgba(232, 74, 95, 0.1);
 }
 
 .selector-item-inner.active {
-  background: var(--primary);
+  background: var(--accent);
   color: white;
   font-weight: bold;
+  box-shadow: inset -2px -2px 0 rgba(0,0,0,0.3);
 }
 
 .selector-highlight {
@@ -379,21 +387,21 @@ watch(() => props.gameState, (newState) => {
   right: 4px;
   height: 40px;
   transform: translateY(-50%);
-  background: rgba(139, 69, 19, 0.08);
-  border-radius: 8px;
+  background: rgba(232, 74, 95, 0.15);
   pointer-events: none;
+  border: 2px solid var(--accent);
 }
 
 .history-event {
-  background: linear-gradient(135deg, #FFF9F0, #FFF5E6);
-  border-radius: 12px;
+  background: var(--bg);
   padding: 16px;
   margin-bottom: 24px;
   border-left: 4px solid var(--accent);
 }
 
 .history-event-title {
-  font-size: 12px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
   color: var(--accent);
   margin-bottom: 8px;
   display: flex;
@@ -405,6 +413,7 @@ watch(() => props.gameState, (newState) => {
   font-size: 13px;
   color: var(--text);
   line-height: 1.6;
+  font-family: 'Noto Sans SC', monospace;
 }
 
 .action-buttons {
@@ -414,11 +423,11 @@ watch(() => props.gameState, (newState) => {
 
 .btn {
   flex: 1;
-  padding: 14px 24px;
-  font-size: 15px;
-  border-radius: 25px;
+  padding: 14px 20px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.1s;
 }
 
 .btn:active {
@@ -426,67 +435,82 @@ watch(() => props.gameState, (newState) => {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--accent), #DC143C);
+  background: var(--accent);
   color: white;
   border: none;
-  box-shadow: 0 4px 15px rgba(196, 30, 58, 0.3);
+  box-shadow:
+    inset -4px -4px 0px rgba(0, 0, 0, 0.3),
+    inset 4px 4px 0px rgba(255, 255, 255, 0.2),
+    0 4px 0 0 var(--primary);
 }
 
 .btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(196, 30, 58, 0.4);
+  transform: translate(-2px, -2px);
+  box-shadow:
+    inset -4px -4px 0px rgba(0, 0, 0, 0.3),
+    inset 4px 4px 0px rgba(255, 255, 255, 0.2),
+    0 4px 0 0 var(--primary),
+    4px 4px 0 0 var(--pixel-border);
 }
 
 .btn-secondary {
   background: transparent;
-  color: var(--primary);
-  border: 2px solid var(--primary);
+  color: var(--text);
+  border: 4px solid var(--pixel-border);
+  box-shadow: inset -4px -4px 0px rgba(0, 0, 0, 0.3);
 }
 
 .btn-secondary:hover {
-  background: var(--primary);
+  background: var(--pixel-border);
   color: white;
 }
 
 .progress-bar {
   width: 100%;
-  height: 4px;
-  background: rgba(139, 69, 19, 0.1);
-  border-radius: 2px;
+  height: 8px;
+  background: var(--bg);
+  border: 3px solid var(--pixel-border);
   margin-bottom: 16px;
   overflow: hidden;
 }
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--primary), var(--accent));
+  background: repeating-linear-gradient(
+    90deg,
+    var(--accent),
+    var(--accent) 8px,
+    var(--gold) 8px,
+    var(--gold) 16px
+  );
   width: 25%;
-  border-radius: 2px;
   transition: width 0.3s ease;
 }
 
 .step-indicator {
   display: flex;
   justify-content: center;
-  gap: 8px;
+  gap: 12px;
   margin-bottom: 16px;
 }
 
 .step-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: rgba(139, 69, 19, 0.2);
+  width: 12px;
+  height: 12px;
+  background: var(--bg);
+  border: 3px solid var(--pixel-border);
   transition: all 0.3s ease;
 }
 
 .step-dot.active {
   background: var(--accent);
-  transform: scale(1.2);
+  border-color: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
 }
 
 .step-dot.completed {
-  background: var(--primary);
+  background: var(--green);
+  border-color: var(--green);
 }
 
 .form-group {
@@ -495,33 +519,34 @@ watch(() => props.gameState, (newState) => {
 
 .form-label {
   display: block;
-  font-size: 12px;
-  color: var(--secondary);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  color: var(--accent2);
   margin-bottom: 8px;
   text-transform: uppercase;
-  letter-spacing: 2px;
+  letter-spacing: 1px;
 }
 
-.form-input {
-  width: 100%;
-  padding: 12px 16px;
-  border: 1px solid var(--secondary);
-  border-radius: 12px;
-  background: var(--bg);
+.pixel-input {
+  font-family: 'Noto Sans SC', monospace;
   font-size: 14px;
+  padding: 12px 16px;
+  background: var(--bg);
+  border: 4px solid var(--pixel-border);
   color: var(--text);
-  font-family: inherit;
-  transition: all 0.2s ease;
-}
-
-.form-input:focus {
+  width: 100%;
   outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(139, 69, 19, 0.1);
+  box-shadow: inset 4px 4px 0 rgba(0,0,0,0.3);
 }
 
-.form-input::placeholder {
-  color: var(--secondary);
-  opacity: 0.7;
+.pixel-input:focus {
+  border-color: var(--accent);
+  box-shadow:
+    inset 4px 4px 0 rgba(0,0,0,0.3),
+    0 0 0 2px rgba(232, 74, 95, 0.3);
+}
+
+.pixel-input::placeholder {
+  color: var(--text-dim);
 }
 </style>

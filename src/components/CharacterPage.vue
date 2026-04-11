@@ -1,7 +1,7 @@
 <template>
   <div class="container">
     <div class="header">
-      <h1>命运roll点</h1>
+      <h1>命运ROLL点</h1>
     </div>
 
     <div class="progress-bar">
@@ -18,7 +18,7 @@
       </div>
 
       <div class="birth-info">
-        <span class="birth-icon">📅</span>
+        <span class="birth-icon">+</span>
         <div class="birth-details">
           <div class="birth-date">{{ character.birthDate }}</div>
           <div class="birth-place">{{ character.birthPlace }}</div>
@@ -31,17 +31,17 @@
       </div>
 
       <div class="attribute-group">
-        <div class="attribute-label">🎭 性格</div>
+        <div class="attribute-label"># 性格</div>
         <div class="attribute-value">{{ character.personality }}</div>
       </div>
 
       <div class="attribute-group">
-        <div class="attribute-label">🏠 家庭背景</div>
+        <div class="attribute-label"># 家庭背景</div>
         <div class="attribute-value">{{ character.familyBackground }}</div>
       </div>
 
       <div class="attribute-group">
-        <div class="attribute-label">✨ 天赋特长</div>
+        <div class="attribute-label">* 天赋特长</div>
         <div class="talent-grid">
           <div class="talent-item" v-for="(talent, index) in character.talents" :key="index">
             {{ talent }}
@@ -49,7 +49,7 @@
         </div>
       </div>
 
-      <button class="reroll-btn" @click="rerollCharacter">🎲 重新roll一个身份</button>
+      <button class="reroll-btn" @click="rerollCharacter">! 重新ROLL一个身份</button>
     </div>
 
     <div class="action-buttons">
@@ -90,9 +90,9 @@ const roleDisplayNames = {
 }
 
 const talentDisplayEmojis = {
-  smart: '📚', diligent: '💪', musical: '🎵', artistic: '🎨', athletic: '🏃',
-  social: '🤝', leadership: '👑', technical: '🔧', literary: '📝', business: '💰',
-  patient: '🧘', brave: '🦁', charismatic: '✨', creative: '💡', memory: '🧠'
+  smart: 'i', diligent: 'II', musical: 'III', artistic: 'IV', athletic: 'V',
+  social: 'VI', leadership: 'VII', technical: 'VIII', literary: 'IX', business: 'X',
+  patient: 'XI', brave: 'XII', charismatic: 'XIII', creative: 'XIV', memory: 'XV'
 }
 
 const randomElement = (array) => array[Math.floor(Math.random() * array.length)]
@@ -115,23 +115,23 @@ const generateRoleByAge = (age) => {
 }
 
 const generateAvatarByAge = (age) => {
-  if (age < 3) return '👶'
-  if (age < 7) return '🧒'
-  if (age < 18) return '👦'
-  if (age < 60) return '👨'
-  return '👴'
+  if (age < 3) return '[B]'
+  if (age < 7) return '[b]'
+  if (age < 18) return '[y]'
+  if (age < 60) return '[M]'
+  return '[O]'
 }
 
 const character = ref({
   name: props.gameState.userName || '李建国',
-  avatar: '👶',
+  avatar: '[B]',
   role: '婴儿',
   birthDate: props.gameState.birthDate || '1985年6月15日',
   birthPlace: props.gameState.birthPlace || '江苏省苏州市',
   age: 0,
   personality: '内向而稳重，内心有着自己的想法',
   familyBackground: '城市普通家庭',
-  talents: ['📚 记忆力强', '🎨 绘画天赋', '🏃 运动细胞'],
+  talents: ['i 记忆力强', 'II 绘画天赋', 'III 运动细胞'],
   _raw: null // 存储原始角色数据供游戏使用
 })
 
@@ -151,7 +151,7 @@ const rerollCharacter = () => {
     age: age,
     personality: `${rawChar.personality.name} · ${rawChar.personality.description}`,
     familyBackground: `${rawChar.familyBackground.cityType === '城市' ? '城市' : '农村'}${rawChar.familyBackground.wealthLevel}家庭 · ${rawChar.familyBackground.description}`,
-    talents: rawChar.talents.map(t => `${talentDisplayEmojis[t.id] || '✨'} ${t.name}`),
+    talents: rawChar.talents.map(t => `${talentDisplayEmojis[t.id] || '*'} ${t.name}`),
     _raw: rawChar
   }
 }
@@ -212,33 +212,41 @@ watch(() => props.gameState, (newState) => {
 }
 
 .header h1 {
-  font-size: 24px;
-  color: var(--primary);
-  font-weight: 700;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 14px;
+  color: var(--gold);
+  text-shadow: 2px 2px 0 var(--primary);
 }
 
 .progress-bar {
   width: 100%;
-  height: 4px;
-  background: rgba(139, 69, 19, 0.1);
-  border-radius: 2px;
+  height: 8px;
+  background: var(--bg);
+  border: 3px solid var(--pixel-border);
   overflow: hidden;
 }
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--primary), var(--accent));
+  background: repeating-linear-gradient(
+    90deg,
+    var(--accent),
+    var(--accent) 8px,
+    var(--gold) 8px,
+    var(--gold) 16px
+  );
   width: 50%;
   transition: width 0.3s ease;
 }
 
 .character-card {
   background: var(--card-bg);
-  border-radius: 20px;
+  border: 4px solid var(--pixel-border);
   padding: 24px;
-  box-shadow: var(--shadow);
   position: relative;
-  overflow: hidden;
+  box-shadow:
+    inset -4px -4px 0px rgba(0, 0, 0, 0.3),
+    inset 4px 4px 0px rgba(255, 255, 255, 0.1);
 }
 
 .character-card::before {
@@ -247,8 +255,14 @@ watch(() => props.gameState, (newState) => {
   top: 0;
   left: 0;
   right: 0;
-  height: 5px;
-  background: linear-gradient(90deg, var(--accent), #E6A23C, var(--accent));
+  height: 4px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--accent),
+    var(--accent) 16px,
+    var(--gold) 16px,
+    var(--gold) 32px
+  );
 }
 
 .character-header {
@@ -257,38 +271,44 @@ watch(() => props.gameState, (newState) => {
   gap: 16px;
   margin-bottom: 20px;
   padding-bottom: 16px;
-  border-bottom: 1px dashed rgba(139, 69, 19, 0.15);
+  border-bottom: 4px solid var(--pixel-border);
 }
 
 .avatar {
   width: 72px;
   height: 72px;
-  background: linear-gradient(135deg, var(--secondary), #E8C9A8);
-  border-radius: 50%;
+  background: var(--bg);
+  border: 4px solid var(--pixel-border);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 36px;
-  box-shadow: 0 4px 12px rgba(139, 69, 19, 0.2);
-  transition: transform 0.3s ease;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 24px;
+  color: var(--gold);
+  box-shadow:
+    inset -4px -4px 0px rgba(0, 0, 0, 0.3),
+    inset 4px 4px 0px rgba(255, 255, 255, 0.1);
+  transition: transform 0.1s;
 }
 
 .avatar:hover {
-  transform: scale(1.05) rotate(5deg);
+  transform: rotate(5deg);
 }
 
 .character-info h2 {
-  font-size: 20px;
-  color: var(--primary);
-  margin-bottom: 4px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 12px;
+  color: var(--gold);
+  margin-bottom: 8px;
 }
 
 .character-info .role {
-  font-size: 13px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
   color: var(--accent);
-  background: rgba(196, 30, 58, 0.1);
-  padding: 3px 10px;
-  border-radius: 12px;
+  background: var(--bg);
+  padding: 4px 8px;
+  border: 2px solid var(--accent);
   display: inline-block;
 }
 
@@ -297,10 +317,9 @@ watch(() => props.gameState, (newState) => {
 }
 
 .attribute-label {
-  font-size: 11px;
-  color: var(--secondary);
-  text-transform: uppercase;
-  letter-spacing: 2px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  color: var(--accent2);
   margin-bottom: 8px;
   display: flex;
   align-items: center;
@@ -308,12 +327,12 @@ watch(() => props.gameState, (newState) => {
 }
 
 .attribute-value {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--text);
-  padding: 10px 14px;
+  padding: 12px 14px;
   background: var(--bg);
-  border-radius: 10px;
-  border-left: 3px solid var(--secondary);
+  border-left: 4px solid var(--accent2);
+  font-family: 'Noto Sans SC', monospace;
 }
 
 .talent-grid {
@@ -323,19 +342,19 @@ watch(() => props.gameState, (newState) => {
 }
 
 .talent-item {
-  background: linear-gradient(135deg, #FFF9F0, #FFF5E6);
-  border-radius: 10px;
+  background: var(--bg);
   padding: 12px 8px;
   text-align: center;
-  font-size: 12px;
+  font-size: 10px;
   color: var(--text);
-  border: 1px solid rgba(139, 69, 19, 0.1);
-  transition: all 0.2s ease;
+  border: 3px solid var(--pixel-border);
+  font-family: 'Noto Sans SC', monospace;
+  transition: all 0.1s;
 }
 
 .talent-item:hover {
+  border-color: var(--gold);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(139, 69, 19, 0.15);
 }
 
 .talent-item:nth-child(1) { animation: fadeIn 0.3s ease 0.2s both; }
@@ -349,20 +368,19 @@ watch(() => props.gameState, (newState) => {
 
 .reroll-btn {
   width: 100%;
-  padding: 12px;
+  padding: 14px;
   background: transparent;
-  border: 2px dashed var(--secondary);
-  border-radius: 12px;
-  font-size: 14px;
-  color: var(--secondary);
+  border: 4px dashed var(--pixel-border);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  color: var(--text);
   cursor: pointer;
   margin-top: 16px;
-  transition: all 0.2s;
-  font-family: inherit;
+  transition: all 0.1s;
 }
 
 .reroll-btn:hover {
-  background: var(--secondary);
+  background: var(--pixel-border);
   color: white;
   border-style: solid;
 }
@@ -379,10 +397,10 @@ watch(() => props.gameState, (newState) => {
 .btn {
   flex: 1;
   padding: 14px 20px;
-  font-size: 15px;
-  border-radius: 25px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.1s;
 }
 
 .btn:active {
@@ -390,40 +408,50 @@ watch(() => props.gameState, (newState) => {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--accent), #DC143C);
+  background: var(--accent);
   color: white;
   border: none;
-  box-shadow: 0 4px 15px rgba(196, 30, 58, 0.3);
+  box-shadow:
+    inset -4px -4px 0px rgba(0, 0, 0, 0.3),
+    inset 4px 4px 0px rgba(255, 255, 255, 0.2),
+    0 4px 0 0 var(--primary);
 }
 
 .btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(196, 30, 58, 0.4);
+  transform: translate(-2px, -2px);
+  box-shadow:
+    inset -4px -4px 0px rgba(0, 0, 0, 0.3),
+    inset 4px 4px 0px rgba(255, 255, 255, 0.2),
+    0 4px 0 0 var(--primary),
+    4px 4px 0 0 var(--pixel-border);
 }
 
 .btn-secondary {
   background: transparent;
-  color: var(--primary);
-  border: 2px solid var(--primary);
+  color: var(--text);
+  border: 4px solid var(--pixel-border);
+  box-shadow: inset -4px -4px 0px rgba(0, 0, 0, 0.3);
 }
 
 .btn-secondary:hover {
-  background: var(--primary);
+  background: var(--pixel-border);
   color: white;
 }
 
 .birth-info {
-  background: linear-gradient(135deg, #FFF9F0, #FFE8D6);
-  border-radius: 12px;
+  background: var(--bg);
   padding: 14px;
   display: flex;
   align-items: center;
   gap: 12px;
-  border: 1px solid rgba(139, 69, 19, 0.1);
+  border: 3px solid var(--pixel-border);
+  margin-bottom: 12px;
 }
 
 .birth-icon {
-  font-size: 28px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 20px;
+  color: var(--gold);
 }
 
 .birth-details {
@@ -431,34 +459,35 @@ watch(() => props.gameState, (newState) => {
 }
 
 .birth-date {
-  font-size: 14px;
-  color: var(--primary);
-  font-weight: 700;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  color: var(--gold);
+  margin-bottom: 4px;
 }
 
 .birth-place {
-  font-size: 12px;
-  color: var(--text);
-  opacity: 0.7;
+  font-size: 11px;
+  color: var(--text-dim);
+  font-family: 'Noto Sans SC', monospace;
 }
 
 .age-info {
-  background: linear-gradient(135deg, #FFF9F0, #FFE8D6);
-  border-radius: 12px;
+  background: var(--bg);
   padding: 14px;
   margin-bottom: 16px;
-  border: 1px solid rgba(139, 69, 19, 0.1);
+  border: 3px solid var(--pixel-border);
 }
 
 .age-label {
-  font-size: 12px;
-  color: var(--secondary);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  color: var(--text-dim);
   margin-bottom: 4px;
 }
 
 .age-value {
-  font-size: 20px;
-  color: var(--primary);
-  font-weight: 700;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 16px;
+  color: var(--accent2);
 }
 </style>

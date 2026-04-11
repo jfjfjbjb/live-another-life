@@ -1,16 +1,16 @@
 <template>
   <div class="container">
     <div class="start-card">
-      <span class="decorative deco-top-left">❧</span>
-      <span class="decorative deco-top-right">❧</span>
-      <span class="decorative deco-bottom-left">❧</span>
-      <span class="decorative deco-bottom-right">❧</span>
+      <span class="decorative deco-top-left">*</span>
+      <span class="decorative deco-top-right">*</span>
+      <span class="decorative deco-bottom-left">*</span>
+      <span class="decorative deco-bottom-right">*</span>
 
       <h1 class="title">重活一世</h1>
-      <p class="subtitle">Live Another Life</p>
-      
+      <p class="subtitle">LIVE ANOTHER LIFE</p>
+
       <div class="divider"></div>
-      
+
       <p class="description">
         从新中国成立那天起<br>
         重新走过风风雨雨几十年<br>
@@ -19,7 +19,7 @@
 
       <div class="year-range">
         <span class="year-badge">1949</span>
-        <span style="color: var(--secondary); align-self: center;">—</span>
+        <span class="year-separator">-</span>
         <span class="year-badge">2024</span>
       </div>
 
@@ -27,19 +27,19 @@
 
       <div class="feature-list">
         <div class="feature-item">
-          <span class="feature-icon">🎲</span>
+          <span class="feature-icon">!</span>
           <span>随机人生</span>
         </div>
         <div class="feature-item">
-          <span class="feature-icon">📖</span>
+          <span class="feature-icon">#</span>
           <span>大事件</span>
         </div>
         <div class="feature-item">
-          <span class="feature-icon">📝</span>
+          <span class="feature-icon">?</span>
           <span>大事记</span>
         </div>
         <div class="feature-item">
-          <span class="feature-icon">⏭</span>
+          <span class="feature-icon">></span>
           <span>跳过功能</span>
         </div>
       </div>
@@ -48,8 +48,8 @@
       <div v-if="historicalLives.length > 0" class="historical-lives">
         <h3 class="historical-title">历史人生</h3>
         <div class="historical-list">
-          <div 
-            v-for="life in historicalLives" 
+          <div
+            v-for="life in historicalLives"
             :key="life.id"
             class="historical-item"
             @click="viewLifeDetail(life)"
@@ -58,7 +58,7 @@
               <div class="historical-age">{{ life.age }}岁</div>
               <div class="historical-period">{{ life.birthDate }} - {{ life.deathDate }}</div>
             </div>
-            <div class="historical-arrow">›</div>
+            <div class="historical-arrow">></div>
           </div>
         </div>
       </div>
@@ -69,7 +69,7 @@
       <div class="modal-content" @click.stop>
         <div class="modal-header">
           <h3>人生回顾</h3>
-          <button class="close-btn" @click="closeLifeDetail">×</button>
+          <button class="close-btn" @click="closeLifeDetail">X</button>
         </div>
         <div class="modal-body">
           <div class="life-summary">
@@ -97,8 +97,8 @@
             <div class="life-events">
               <h4>重要事件 ({{ importantEvents.length }})</h4>
               <div class="event-list">
-                <div 
-                  v-for="event in importantEvents.slice(0, 5)" 
+                <div
+                  v-for="event in importantEvents.slice(0, 5)"
                   :key="event.id"
                   class="event-item"
                 >
@@ -178,12 +178,13 @@ const closeLifeDetail = () => {
 .start-card {
   width: 100%;
   background: var(--card-bg);
-  border-radius: 20px;
+  border: 4px solid var(--pixel-border);
   padding: 48px 32px;
-  box-shadow: var(--shadow);
   text-align: center;
   position: relative;
-  overflow: hidden;
+  box-shadow:
+    inset -4px -4px 0px rgba(0, 0, 0, 0.3),
+    inset 4px 4px 0px rgba(255, 255, 255, 0.1);
 }
 
 .start-card::before {
@@ -192,44 +193,51 @@ const closeLifeDetail = () => {
   top: 0;
   left: 0;
   right: 0;
-  height: 6px;
-  background: linear-gradient(90deg, var(--accent), #E6A23C, var(--accent));
-}
-
-.start-card::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 6px;
-  background: linear-gradient(90deg, var(--accent), #E6A23C, var(--accent));
+  height: 4px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--accent),
+    var(--accent) 16px,
+    var(--gold) 16px,
+    var(--gold) 32px
+  );
 }
 
 .title {
-  font-size: 48px;
-  color: var(--primary);
-  margin-bottom: 8px;
-  letter-spacing: 8px;
-  animation: titleGlow 2s ease-in-out infinite;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 20px;
+  color: var(--gold);
+  margin-bottom: 16px;
+  text-shadow:
+    4px 4px 0 var(--primary),
+    -2px -2px 0 var(--accent);
+  animation: titlePixel 1s ease-in-out infinite;
 }
 
-@keyframes titleGlow {
-  0%, 100% { text-shadow: 2px 2px 4px rgba(139, 69, 19, 0.2); }
-  50% { text-shadow: 2px 2px 12px rgba(139, 69, 19, 0.35); }
+@keyframes titlePixel {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(2px, 0); }
+  75% { transform: translate(-2px, 0); }
 }
 
 .subtitle {
-  font-size: 13px;
-  color: var(--secondary);
-  letter-spacing: 4px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  color: var(--accent2);
+  letter-spacing: 2px;
   margin-bottom: 32px;
 }
 
 .divider {
   width: 60%;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--secondary), transparent);
+  height: 4px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--secondary),
+    var(--secondary) 8px,
+    transparent 8px,
+    transparent 16px
+  );
   margin: 24px auto;
 }
 
@@ -238,70 +246,74 @@ const closeLifeDetail = () => {
   font-size: 14px;
   line-height: 1.8;
   margin-bottom: 32px;
-  opacity: 0.85;
 }
 
 .year-range {
   display: flex;
   justify-content: center;
+  align-items: center;
   gap: 16px;
   margin: 24px 0;
 }
 
 .year-badge {
-  background: linear-gradient(135deg, var(--primary), #A0522D);
-  color: white;
-  padding: 8px 20px;
-  border-radius: 20px;
-  font-size: 18px;
-  font-weight: 600;
-  box-shadow: 0 4px 12px rgba(139, 69, 19, 0.3);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  background: var(--bg);
+  color: var(--gold);
+  padding: 12px 16px;
+  border: 4px solid var(--pixel-border);
+  box-shadow:
+    inset -4px -4px 0px rgba(0, 0, 0, 0.3),
+    inset 4px 4px 0px rgba(255, 255, 255, 0.1);
+  transition: all 0.1s;
 }
 
 .year-badge:hover {
-  transform: scale(1.05);
-  box-shadow: 0 6px 16px rgba(139, 69, 19, 0.4);
+  transform: translate(-2px, -2px);
+  box-shadow:
+    inset -4px -4px 0px rgba(0, 0, 0, 0.3),
+    inset 4px 4px 0px rgba(255, 255, 255, 0.1),
+    8px 8px 0 var(--pixel-border);
+}
+
+.year-separator {
+  color: var(--secondary);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 12px;
 }
 
 .start-btn {
-  background: linear-gradient(135deg, var(--accent), #DC143C);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 12px;
+  background: var(--accent);
   color: white;
   border: none;
-  padding: 16px 48px;
-  font-size: 18px;
-  border-radius: 30px;
+  padding: 16px 32px;
   cursor: pointer;
-  box-shadow: 0 6px 20px rgba(196, 30, 58, 0.4);
-  transition: all 0.3s ease;
   position: relative;
-  overflow: hidden;
+  box-shadow:
+    inset -4px -4px 0px rgba(0, 0, 0, 0.3),
+    inset 4px 4px 0px rgba(255, 255, 255, 0.2),
+    0 4px 0 0 var(--primary);
+  transition: all 0.1s;
 }
 
 .start-btn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 10px 30px rgba(196, 30, 58, 0.5);
+  transform: translate(-2px, -2px);
+  box-shadow:
+    inset -4px -4px 0px rgba(0, 0, 0, 0.3),
+    inset 4px 4px 0px rgba(255, 255, 255, 0.2),
+    0 4px 0 0 var(--primary),
+    4px 4px 0 0 var(--pixel-border);
 }
 
 .start-btn:active {
-  transform: translateY(-1px) scale(0.98);
-}
-
-.start-btn::after {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
-  transform: rotate(45deg);
-  animation: shimmer 3s infinite;
-}
-
-@keyframes shimmer {
-  0% { transform: translateX(-100%) rotate(45deg); }
-  100% { transform: translateX(100%) rotate(45deg); }
+  transform: translate(2px, 2px);
+  box-shadow:
+    inset 4px 4px 0px rgba(0, 0, 0, 0.3),
+    inset -4px -4px 0px rgba(255, 255, 255, 0.2),
+    0 0px 0 0 var(--primary);
 }
 
 .feature-list {
@@ -314,50 +326,48 @@ const closeLifeDetail = () => {
 .feature-item {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  font-size: 12px;
+  font-size: 10px;
   color: var(--text);
-  opacity: 0.7;
-  transition: opacity 0.2s ease;
-}
-
-.feature-item:hover {
-  opacity: 1;
+  padding: 12px 8px;
+  background: var(--bg);
+  border: 3px solid var(--pixel-border);
+  font-family: 'Noto Sans SC', monospace;
 }
 
 .feature-icon {
-  width: 28px;
-  height: 28px;
-  background: linear-gradient(135deg, var(--secondary), #E8C9A8);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 12px;
+  color: var(--gold);
 }
 
 .decorative {
   position: absolute;
-  font-size: 24px;
-  opacity: 0.12;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 16px;
+  color: var(--pixel-border);
+  opacity: 0.5;
 }
 
-.deco-top-left { top: 20px; left: 20px; }
-.deco-top-right { top: 20px; right: 20px; transform: rotate(90deg); }
-.deco-bottom-left { bottom: 20px; left: 20px; transform: rotate(-90deg); }
-.deco-bottom-right { bottom: 20px; right: 20px; transform: rotate(180deg); }
+.deco-top-left { top: 12px; left: 12px; }
+.deco-top-right { top: 12px; right: 12px; transform: rotate(90deg); }
+.deco-bottom-left { bottom: 12px; left: 12px; transform: rotate(-90deg); }
+.deco-bottom-right { bottom: 12px; right: 12px; transform: rotate(180deg); }
 
 /* 历史人生记录样式 */
 .historical-lives {
   margin-top: 32px;
   padding-top: 24px;
-  border-top: 1px dashed rgba(139, 69, 19, 0.15);
+  border-top: 4px solid var(--pixel-border);
+  background: var(--bg);
+  padding: 16px;
 }
 
 .historical-title {
-  font-size: 16px;
-  color: var(--primary);
-  font-weight: 700;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  color: var(--gold);
   margin-bottom: 16px;
   text-align: left;
 }
@@ -365,24 +375,23 @@ const closeLifeDetail = () => {
 .historical-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
 .historical-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 16px;
-  background: linear-gradient(135deg, #FFF9F0, #FFF5E6);
-  border-radius: 12px;
-  border-left: 3px solid var(--secondary);
+  padding: 12px;
+  background: var(--card-bg);
+  border: 3px solid var(--pixel-border);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.1s;
 }
 
 .historical-item:hover {
-  transform: translateX(4px);
-  box-shadow: 0 4px 12px rgba(139, 69, 19, 0.1);
+  transform: translate(4px, 0);
+  border-color: var(--accent);
 }
 
 .historical-info {
@@ -390,21 +399,22 @@ const closeLifeDetail = () => {
 }
 
 .historical-age {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--primary);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  color: var(--accent);
   margin-bottom: 4px;
 }
 
 .historical-period {
-  font-size: 12px;
-  color: var(--secondary);
+  font-size: 10px;
+  color: var(--text-dim);
+  font-family: 'Noto Sans SC', monospace;
 }
 
 .historical-arrow {
-  font-size: 20px;
-  color: var(--secondary);
-  opacity: 0.7;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 12px;
+  color: var(--accent);
 }
 
 /* 弹窗样式 */
@@ -414,7 +424,7 @@ const closeLifeDetail = () => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.85);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -429,13 +439,16 @@ const closeLifeDetail = () => {
 
 .modal-content {
   background: var(--card-bg);
-  border-radius: 20px;
+  border: 4px solid var(--pixel-border);
   padding: 24px;
   max-width: 90%;
   width: 360px;
   max-height: 80vh;
   overflow-y: auto;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  box-shadow:
+    inset -4px -4px 0px rgba(0, 0, 0, 0.3),
+    inset 4px 4px 0px rgba(255, 255, 255, 0.1),
+    0 0 40px rgba(232, 74, 95, 0.3);
   animation: slideIn 0.3s ease;
 }
 
@@ -450,35 +463,33 @@ const closeLifeDetail = () => {
   align-items: flex-start;
   margin-bottom: 20px;
   padding-bottom: 12px;
-  border-bottom: 1px dashed rgba(139, 69, 19, 0.15);
+  border-bottom: 4px solid var(--pixel-border);
 }
 
 .modal-header h3 {
-  font-size: 18px;
-  color: var(--primary);
-  font-weight: 700;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 12px;
+  color: var(--gold);
   margin: 0;
 }
 
 .close-btn {
-  background: none;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 12px;
+  background: var(--accent);
+  color: white;
   border: none;
-  font-size: 24px;
-  color: var(--secondary);
   cursor: pointer;
-  padding: 0;
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
-  transition: all 0.2s ease;
+  box-shadow: inset -2px -2px 0 rgba(0,0,0,0.3);
 }
 
 .close-btn:hover {
-  background: var(--bg);
-  color: var(--primary);
+  background: var(--accent2);
 }
 
 .life-header {
@@ -487,9 +498,9 @@ const closeLifeDetail = () => {
 }
 
 .life-header h3 {
-  font-size: 24px;
-  color: var(--primary);
-  font-weight: 700;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 14px;
+  color: var(--gold);
   margin: 0;
 }
 
@@ -510,24 +521,26 @@ const closeLifeDetail = () => {
   justify-content: space-between;
   align-items: center;
   padding: 8px 0;
-  border-bottom: 1px solid rgba(139, 69, 19, 0.1);
+  border-bottom: 2px solid var(--pixel-border);
 }
 
 .meta-label {
-  font-size: 14px;
-  color: var(--secondary);
+  font-size: 12px;
+  color: var(--text-dim);
+  font-family: 'Noto Sans SC', monospace;
 }
 
 .meta-value {
-  font-size: 14px;
-  color: var(--primary);
-  font-weight: 600;
+  font-size: 12px;
+  color: var(--accent2);
+  font-weight: bold;
+  font-family: 'Noto Sans SC', monospace;
 }
 
 .life-events h4 {
-  font-size: 16px;
-  color: var(--primary);
-  font-weight: 700;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  color: var(--gold);
   margin-bottom: 12px;
   margin-top: 0;
 }
@@ -535,36 +548,45 @@ const closeLifeDetail = () => {
 .event-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .event-item {
   padding: 10px;
-  background: linear-gradient(135deg, #FFF9F0, #FFF5E6);
-  border-radius: 8px;
-  border-left: 2px solid var(--secondary);
+  background: var(--bg);
+  border-left: 4px solid var(--accent);
 }
 
 .event-date {
-  font-size: 11px;
-  color: var(--secondary);
+  font-size: 10px;
+  color: var(--text-dim);
   margin-bottom: 4px;
+  font-family: 'Noto Sans SC', monospace;
 }
 
 .event-title {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--text);
-  font-weight: 600;
+  font-weight: bold;
+  font-family: 'Noto Sans SC', monospace;
 }
 
 .event-more {
-  font-size: 12px;
-  color: var(--secondary);
+  font-size: 10px;
+  color: var(--text-dim);
   text-align: center;
   padding: 8px;
   background: var(--bg);
-  border-radius: 8px;
+  border: 2px solid var(--pixel-border);
   margin-top: 8px;
+  font-family: 'Press Start 2P', monospace;
 }
 
+.no-events {
+  font-size: 12px;
+  color: var(--text-dim);
+  text-align: center;
+  padding: 16px;
+  font-family: 'Noto Sans SC', monospace;
+}
 </style>
