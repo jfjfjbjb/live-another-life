@@ -29,22 +29,22 @@
         v-for="event in allEvents"
         :key="event.id"
         class="timeline-item"
-        :class="{ important: event.important }"
-        @click="showEventDetail(event)"
+        :class="[event.eventCategory, { important: event.important }]"
       >
         <div class="item-header">
           <span class="item-date">{{ event.date }} · {{ event.age }}岁</span>
-          <span class="item-star" @click.stop="toggleImportant(event.id)">{{ event.important ? '*' : '-' }}</span>
+          <span v-if="event.eventCategory" class="item-category" :class="event.eventCategory">
+            {{ event.eventCategory === 'self' ? '[自]' : '[环]' }}
+          </span>
         </div>
         <div class="item-title">{{ event.bigEvent ? '大事件：' + event.bigEvent.title : event.title }}</div>
-        <div class="item-preview">{{ event.bigEvent ? event.bigEvent.description : event.content }}</div>
+        <div class="item-full-content">{{ event.bigEvent ? event.bigEvent.description : event.content }}</div>
         <div class="item-tags">
           <span
             v-for="tag in event.tags"
             :key="tag"
             class="item-tag"
           >{{ tag }}</span>
-          <span class="item-mood">{{ event.mood }}</span>
         </div>
       </div>
       <div v-if="allEvents.length === 0" class="no-events">
@@ -52,38 +52,11 @@
       </div>
     </div>
 
-    <!-- 大事件详情弹窗 -->
-    <div v-if="selectedEvent" class="event-detail-modal" @click="closeEventDetail">
-      <div class="event-detail-content" @click.stop>
-        <div class="event-detail-header">
-          <h2>{{ selectedEvent.bigEvent ? '大事件：' + selectedEvent.bigEvent.title : selectedEvent.title }}</h2>
-          <button class="close-btn" @click="closeEventDetail">X</button>
-        </div>
-        <div class="event-detail-meta">
-          <span>{{ selectedEvent.date }}</span>
-          <span>{{ selectedEvent.age }}岁</span>
-        </div>
-        <div class="event-detail-description">
-          {{ selectedEvent.bigEvent ? selectedEvent.bigEvent.description : selectedEvent.content }}
-        </div>
-        <div class="event-detail-footer">
-          <div class="event-detail-tags">
-            <span
-              v-for="tag in selectedEvent.tags"
-              :key="tag"
-              class="detail-tag"
-            >{{ tag }}</span>
-          </div>
-          <div class="event-detail-mood">{{ selectedEvent.mood }}</div>
-        </div>
-      </div>
-    </div>
-
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch } from 'vue'
 
 const props = defineProps({
   gameState: {
@@ -101,23 +74,12 @@ const stats = ref({
   importantEvents: 0,
   thisYearEvents: 0
 })
-const selectedEvent = ref(null)
 
-const toggleImportant = (eventId) => {
-  // 实现标记重要功能
-  console.log('Toggle important', eventId)
-}
-
-const showEventDetail = (event) => {
-  selectedEvent.value = event
-}
-
-const closeEventDetail = () => {
-  selectedEvent.value = null
-}
-
-onMounted(() => {
+const loadEvents = () => {
   const gameEvents = props.gameState.events || []
+
+  // 显示所有重要事件
+  const filteredEvents = gameEvents.filter(event => event.important || event.bigEvent)
 
   // 获取游戏内的当前年份
   const currentDateStr = props.gameState.currentDate || ''
@@ -125,13 +87,13 @@ onMounted(() => {
   const currentGameYear = currentYearMatch ? currentYearMatch[1] : null
 
   let totalEvents = 0
-  let importantEvents = 0
+  let taggedImportantEvents = 0
   let thisYearEvents = 0
 
-  gameEvents.forEach(event => {
+  filteredEvents.forEach(event => {
     totalEvents++
     if (event.important || event.bigEvent) {
-      importantEvents++
+      taggedImportantEvents++
     }
     // 检查是否是今年的事件（使用游戏内年份）
     const yearMatch = event.date.match(/(\d+)年/)
@@ -140,18 +102,21 @@ onMounted(() => {
     }
   })
 
-  // 显示所有事件，按日期降序排序
-  allEvents.value = [...gameEvents].sort((a, b) => {
-    const dateA = a.date.replace(/年|月|日/g, '-')
-    const dateB = b.date.replace(/年|月|日/g, '-')
-    return new Date(dateB) - new Date(dateA)
+  // 显示所有重要事件，按日期降序排序
+  allEvents.value = [...filteredEvents].sort((a, b) => {
+    const yearA = parseInt(a.date.match(/(\d+)年/)?.[1] || '0')
+    const yearB = parseInt(b.date.match(/(\d+)年/)?.[1] || '0')
+    return yearB - yearA
   })
   stats.value = {
     totalEvents,
-    importantEvents,
+    importantEvents: taggedImportantEvents,
     thisYearEvents
   }
-})
+}
+
+// 监听游戏状态变化，实时更新事件列表
+watch(() => props.gameState.events, loadEvents, { immediate: true })
 </script>
 
 <style scoped>
@@ -287,6 +252,16 @@ onMounted(() => {
     inset 4px 4px 0px rgba(255, 255, 255, 0.1);
 }
 
+.timeline-item.self {
+  background: rgba(218, 165, 32, 0.08);
+  border-left: 6px solid var(--gold);
+}
+
+.timeline-item.environment {
+  background: var(--card-bg);
+  border-left: 6px solid var(--accent2);
+}
+
 .timeline-item:hover {
   transform: translateX(4px);
   border-color: var(--accent2);
@@ -339,6 +314,15 @@ onMounted(() => {
   transform: scale(1.3);
 }
 
+.item-category {
+  font-size: 8px;
+  padding: 2px 6px;
+  border-radius: 2px;
+  margin-left: 8px;
+}
+.item-category.self { background: rgba(218, 165, 32, 0.3); color: var(--gold); }
+.item-category.environment { background: rgba(100, 100, 180, 0.3); color: var(--accent2); }
+
 .item-title {
   font-family: 'Press Start 2P', monospace;
   font-size: 9px;
@@ -355,6 +339,13 @@ onMounted(() => {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  font-family: 'Noto Sans SC', monospace;
+}
+
+.item-full-content {
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.6;
   font-family: 'Noto Sans SC', monospace;
 }
 
@@ -376,13 +367,6 @@ onMounted(() => {
 
 .item-tag:active {
   transform: scale(0.9);
-}
-
-.item-mood {
-  font-family: 'Press Start 2P', monospace;
-  font-size: 10px;
-  margin-left: auto;
-  color: var(--gold);
 }
 
 /* 大事件详情弹窗样式 */
@@ -429,6 +413,8 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 8px;
   margin-bottom: 16px;
   padding-bottom: 12px;
   border-bottom: 4px solid var(--pixel-border);
@@ -442,6 +428,14 @@ onMounted(() => {
   flex: 1;
   line-height: 1.5;
 }
+
+.detail-category {
+  font-size: 8px;
+  padding: 4px 8px;
+  border-radius: 2px;
+}
+.detail-category.self { background: rgba(218, 165, 32, 0.2); color: var(--gold); }
+.detail-category.environment { background: rgba(100, 100, 180, 0.2); color: var(--accent2); }
 
 .close-btn {
   font-family: 'Press Start 2P', monospace;
@@ -482,7 +476,7 @@ onMounted(() => {
 
 .event-detail-footer {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
   padding-top: 16px;
   border-top: 4px solid var(--pixel-border);
@@ -501,12 +495,6 @@ onMounted(() => {
   border: 2px solid var(--pixel-border);
   color: var(--accent2);
   font-family: 'Noto Sans SC', monospace;
-}
-
-.event-detail-mood {
-  font-family: 'Press Start 2P', monospace;
-  font-size: 14px;
-  color: var(--gold);
 }
 
 .no-events {

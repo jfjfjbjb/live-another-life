@@ -8,7 +8,21 @@
       "mcp__chrome-devtools__evaluate_script",
       "mcp__chrome-devtools__close_page",
       "mcp__chrome-devtools__new_page",
-      "Bash(pkill -f \"vite\")"
+      "Bash(pkill -f \"vite\")",
+      "mcp__chrome-devtools__take_screenshot",
+      "mcp__chrome-devtools__wait_for",
+      "Bash(sed -i '932,936d' LifePage.vue)",
+      "Bash(sed -i '920,922d' LifePage.vue)",
+      "Bash(sed -i '925,927s/10px/12px/' LifePage.vue)",
+      "Bash(npx eslint:*)",
+      "Bash(node -e ':*)",
+      "Bash(node test-life-logic.js)",
+      "Bash(node -c src/components/LifePage.vue)",
+      "Bash(mv test-life-logic.js test-life-logic.cjs)",
+      "Bash(node test-life-logic.cjs)",
+      "Bash(node test-logic.js)",
+      "Bash(ls *.js *.html)",
+      "Bash(node test-logic.cjs)"
     ]
   }
 }

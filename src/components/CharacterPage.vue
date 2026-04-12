@@ -5,7 +5,7 @@
     </div>
 
     <div class="progress-bar">
-      <div class="progress-fill" style="width: 50%"></div>
+      <div class="progress-fill"></div>
     </div>
 
     <div class="character-card">
@@ -14,6 +14,7 @@
         <div class="character-info">
           <h2>{{ character.name }}</h2>
           <span class="role">{{ character.role }}</span>
+          <span class="gender-badge">{{ character.gender === 'female' ? '♀ 女性' : '♂ 男性' }}</span>
         </div>
       </div>
 
@@ -38,15 +39,6 @@
       <div class="attribute-group">
         <div class="attribute-label"># 家庭背景</div>
         <div class="attribute-value">{{ character.familyBackground }}</div>
-      </div>
-
-      <div class="attribute-group">
-        <div class="attribute-label">* 天赋特长</div>
-        <div class="talent-grid">
-          <div class="talent-item" v-for="(talent, index) in character.talents" :key="index">
-            {{ talent }}
-          </div>
-        </div>
       </div>
 
       <button class="reroll-btn" @click="rerollCharacter">! 重新ROLL一个身份</button>
@@ -89,17 +81,13 @@ const roleDisplayNames = {
   florist: '花店老板', baker: '烘焙师', mechanic: '修理工', pilot: '飞行员', captain: '船长'
 }
 
-const talentDisplayEmojis = {
-  smart: 'i', diligent: 'II', musical: 'III', artistic: 'IV', athletic: 'V',
-  social: 'VI', leadership: 'VII', technical: 'VIII', literary: 'IX', business: 'X',
-  patient: 'XI', brave: 'XII', charismatic: 'XIII', creative: 'XIV', memory: 'XV'
-}
-
 const randomElement = (array) => array[Math.floor(Math.random() * array.length)]
 
-const generateName = () => {
+const generateName = (gender = 'male') => {
   const surnames = ['李', '王', '张', '刘', '陈', '杨', '赵', '黄', '周', '吴', '徐', '孙', '马', '朱', '胡', '郭', '何', '高', '林', '罗', '郑', '梁', '谢', '宋', '唐', '许', '韩', '冯', '邓', '曹', '彭', '曾', '肖', '田', '董', '袁', '潘', '于', '蒋', '蔡', '余', '杜', '叶', '程', '苏', '魏', '吕', '丁', '任', '沈']
-  const names = ['建国', '建军', '建民', '建华', '小明', '小红', '小华', '小丽', '小强', '小刚', '小芳', '小亮', '小伟', '小燕', '小敏', '小霞', '小娟', '小杰', '小涛', '小磊', '小辉', '小宇', '小俊', '小琳', '小丹', '小琴', '小婷', '小娜', '小佳', '小慧']
+  const maleNames = ['建国', '建军', '建民', '建华', '小明', '小强', '小刚', '小亮', '小伟', '小杰', '小涛', '小磊', '小辉', '小宇', '小俊', '小浩', '小鹏', '小飞', '小勇', '小龙']
+  const femaleNames = ['小红', '小丽', '小芳', '小燕', '小敏', '小霞', '小娟', '小琳', '小丹', '小琴', '小婷', '小娜', '小佳', '小慧', '小颖', '小梅', '小兰', '小云', '小英', '小蓉']
+  const names = gender === 'female' ? femaleNames : maleNames
   return randomElement(surnames) + randomElement(names)
 }
 
@@ -114,24 +102,30 @@ const generateRoleByAge = (age) => {
   return '退休人员'
 }
 
-const generateAvatarByAge = (age) => {
-  if (age < 3) return '[B]'
-  if (age < 7) return '[b]'
-  if (age < 18) return '[y]'
-  if (age < 60) return '[M]'
-  return '[O]'
+const generateAvatarByAge = (age, gender = 'male', healthState = 'normal') => {
+  // Emoji人物头像系统（无状态表情）
+  // 婴儿 👶 幼儿 🧒 少年 🧒 青年 🧑 成年 👨/👩 老年 🧓
+
+  if (age < 1) return '👶'
+  if (age < 3) return '👶'
+  if (age < 12) return gender === 'female' ? '👧' : '👦'
+  if (age < 18) return gender === 'female' ? '👧' : '👦'
+  if (age < 40) return gender === 'female' ? '👩' : '👨'
+  if (age < 60) return gender === 'female' ? '👩' : '👨'
+  return gender === 'female' ? '👵' : '👴'
 }
 
 const character = ref({
   name: props.gameState.userName || '李建国',
-  avatar: '[B]',
+  avatar: '[B♂:]',
   role: '婴儿',
   birthDate: props.gameState.birthDate || '1985年6月15日',
   birthPlace: props.gameState.birthPlace || '江苏省苏州市',
   age: 0,
+  gender: props.gameState.gender || 'male',
+  healthState: 'normal',
   personality: '内向而稳重，内心有着自己的想法',
   familyBackground: '城市普通家庭',
-  talents: ['i 记忆力强', 'II 绘画天赋', 'III 运动细胞'],
   _raw: null // 存储原始角色数据供游戏使用
 })
 
@@ -140,18 +134,23 @@ const rerollCharacter = () => {
   const rawChar = generateCharacter()
   const location = generateLocation()
   const age = character.value.age
+  const gender = props.gameState.gender || character.value.gender || 'male'
+
+  // 如果用户已手动输入出生地，保留用户的输入；否则随机生成
+  const userBirthPlace = props.gameState.birthPlace
 
   // 构建显示用角色
   character.value = {
-    name: props.gameState.userName || generateName(),
-    avatar: generateAvatarByAge(age),
+    name: props.gameState.userName || generateName(gender),
+    avatar: generateAvatarByAge(age, gender, 'normal'),
     role: generateRoleByAge(age),
     birthDate: props.gameState.birthDate || '1985年6月15日',
-    birthPlace: location.fullAddress,
+    birthPlace: userBirthPlace || location.fullAddress,
     age: age,
+    gender: gender,
+    healthState: 'normal',
     personality: `${rawChar.personality.name} · ${rawChar.personality.description}`,
     familyBackground: `${rawChar.familyBackground.cityType === '城市' ? '城市' : '农村'}${rawChar.familyBackground.wealthLevel}家庭 · ${rawChar.familyBackground.description}`,
-    talents: rawChar.talents.map(t => `${talentDisplayEmojis[t.id] || '*'} ${t.name}`),
     _raw: rawChar
   }
 }
@@ -161,7 +160,8 @@ const startLife = () => {
   const fullCharacter = {
     ...(character.value._raw || {}),
     birthPlace: character.value.birthPlace,
-    name: character.value.name
+    name: character.value.name,
+    gender: character.value.gender
   }
   emit('update:game-state', {
     character: fullCharacter,
@@ -235,7 +235,7 @@ watch(() => props.gameState, (newState) => {
     var(--gold) 8px,
     var(--gold) 16px
   );
-  width: 50%;
+  width: 66%;
   transition: width 0.3s ease;
 }
 
@@ -282,17 +282,27 @@ watch(() => props.gameState, (newState) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'Press Start 2P', monospace;
-  font-size: 24px;
-  color: var(--gold);
+  font-size: 40px;
+  line-height: 1;
   box-shadow:
     inset -4px -4px 0px rgba(0, 0, 0, 0.3),
     inset 4px 4px 0px rgba(255, 255, 255, 0.1);
   transition: transform 0.1s;
+  animation: avatarBounce 2s ease-in-out infinite;
+}
+
+@keyframes avatarBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
 }
 
 .avatar:hover {
-  transform: rotate(5deg);
+  animation: avatarBounceFast 0.5s ease-in-out infinite;
+}
+
+@keyframes avatarBounceFast {
+  0%, 100% { transform: translateY(0) scale(1.05); }
+  50% { transform: translateY(-5px) scale(1.05); }
 }
 
 .character-info h2 {
@@ -309,6 +319,17 @@ watch(() => props.gameState, (newState) => {
   background: var(--bg);
   padding: 4px 8px;
   border: 2px solid var(--accent);
+  display: inline-block;
+  margin-right: 8px;
+}
+
+.character-info .gender-badge {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  color: var(--gold);
+  background: var(--bg);
+  padding: 4px 8px;
+  border: 2px solid var(--gold);
   display: inline-block;
 }
 
@@ -333,37 +354,6 @@ watch(() => props.gameState, (newState) => {
   background: var(--bg);
   border-left: 4px solid var(--accent2);
   font-family: 'Noto Sans SC', monospace;
-}
-
-.talent-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-}
-
-.talent-item {
-  background: var(--bg);
-  padding: 12px 8px;
-  text-align: center;
-  font-size: 10px;
-  color: var(--text);
-  border: 3px solid var(--pixel-border);
-  font-family: 'Noto Sans SC', monospace;
-  transition: all 0.1s;
-}
-
-.talent-item:hover {
-  border-color: var(--gold);
-  transform: translateY(-2px);
-}
-
-.talent-item:nth-child(1) { animation: fadeIn 0.3s ease 0.2s both; }
-.talent-item:nth-child(2) { animation: fadeIn 0.3s ease 0.3s both; }
-.talent-item:nth-child(3) { animation: fadeIn 0.3s ease 0.4s both; }
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: scale(0.9); }
-  to { opacity: 1; transform: scale(1); }
 }
 
 .reroll-btn {

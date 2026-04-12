@@ -98,15 +98,19 @@
               <h4>重要事件 ({{ importantEvents.length }})</h4>
               <div class="event-list">
                 <div
-                  v-for="event in importantEvents.slice(0, 5)"
+                  v-for="event in importantEvents"
                   :key="event.id"
                   class="event-item"
+                  :class="event.eventCategory"
                 >
-                  <div class="event-date">{{ event.date }}</div>
-                  <div class="event-title">{{ event.bigEvent ? '大事件：' + event.bigEvent.title : event.title }}</div>
-                </div>
-                <div v-if="importantEvents.length > 5" class="event-more">
-                  还有 {{ importantEvents.length - 5 }} 个事件...
+                  <div class="event-date">{{ event.date }} · {{ event.age || 0 }}岁</div>
+                  <div class="event-title">
+                    <span v-if="event.eventCategory" class="event-category-tag" :class="event.eventCategory">
+                      {{ event.eventCategory === 'self' ? '[自]' : '[环]' }}
+                    </span>
+                    {{ event.bigEvent ? event.bigEvent.title : event.title }}
+                  </div>
+                  <div class="event-desc">{{ event.bigEvent ? event.bigEvent.description : event.content || '' }}</div>
                 </div>
                 <div v-if="importantEvents.length === 0" class="no-events">
                   暂无重要事件
@@ -555,6 +559,23 @@ const closeLifeDetail = () => {
   padding: 10px;
   background: var(--bg);
   border-left: 4px solid var(--accent);
+  cursor: pointer;
+  transition: all 0.1s;
+}
+
+.event-item.self {
+  background: rgba(218, 165, 32, 0.1);
+  border-left-color: var(--gold);
+}
+
+.event-item.environment {
+  background: var(--bg);
+  border-left-color: var(--accent2);
+}
+
+.event-item:hover {
+  transform: translateX(4px);
+  border-left-color: var(--gold);
 }
 
 .event-date {
@@ -571,15 +592,20 @@ const closeLifeDetail = () => {
   font-family: 'Noto Sans SC', monospace;
 }
 
-.event-more {
-  font-size: 10px;
+.event-category-tag {
+  font-size: 8px;
+  padding: 2px 6px;
+  border-radius: 2px;
+  margin-right: 6px;
+}
+.event-category-tag.self { background: rgba(218, 165, 32, 0.3); color: var(--gold); }
+.event-category-tag.environment { background: rgba(100, 100, 180, 0.3); color: var(--accent2); }
+
+.event-desc {
+  font-size: 11px;
   color: var(--text-dim);
-  text-align: center;
-  padding: 8px;
-  background: var(--bg);
-  border: 2px solid var(--pixel-border);
-  margin-top: 8px;
-  font-family: 'Press Start 2P', monospace;
+  margin-top: 4px;
+  font-family: 'Noto Sans SC', monospace;
 }
 
 .no-events {

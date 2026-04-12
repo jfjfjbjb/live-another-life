@@ -83,12 +83,12 @@ export const talents = [
 ]
 
 export const familyBackgrounds = [
-  { id: 'urbanRich', name: '城市富裕', cityType: '城市', wealthLevel: '富裕', income: 500, education: 12, description: '生活在城市，家庭条件优渥' },
-  { id: 'urbanMiddle', name: '城市普通', cityType: '城市', wealthLevel: '普通', income: 200, education: 10, description: '生活在城市，家庭条件一般' },
-  { id: 'urbanPoor', name: '城市贫困', cityType: '城市', wealthLevel: '贫困', income: 80, education: 8, description: '生活在城市，家庭条件困难' },
-  { id: 'ruralRich', name: '农村富裕', cityType: '农村', wealthLevel: '富裕', income: 300, education: 8, description: '生活在农村，家庭条件较好' },
-  { id: 'ruralMiddle', name: '农村普通', cityType: '农村', wealthLevel: '普通', income: 100, education: 6, description: '生活在农村，家庭条件一般' },
-  { id: 'ruralPoor', name: '农村贫困', cityType: '农村', wealthLevel: '贫困', income: 50, education: 4, description: '生活在农村，家庭条件困难' }
+  { id: 'urbanRich', name: '城市富裕', cityType: '城市', wealthLevel: '富裕', income: 500, education: 12, description: '生活在城市，家庭条件优渥', wealthGrowthRate: 1.5 },
+  { id: 'urbanMiddle', name: '城市普通', cityType: '城市', wealthLevel: '普通', income: 200, education: 10, description: '生活在城市，家庭条件一般', wealthGrowthRate: 1.0 },
+  { id: 'urbanPoor', name: '城市贫困', cityType: '城市', wealthLevel: '贫困', income: 80, education: 8, description: '生活在城市，家庭条件困难', wealthGrowthRate: 0.7 },
+  { id: 'ruralRich', name: '农村富裕', cityType: '农村', wealthLevel: '富裕', income: 300, education: 8, description: '生活在农村，家庭条件较好', wealthGrowthRate: 1.2 },
+  { id: 'ruralMiddle', name: '农村普通', cityType: '农村', wealthLevel: '普通', income: 100, education: 6, description: '生活在农村，家庭条件一般', wealthGrowthRate: 0.8 },
+  { id: 'ruralPoor', name: '农村贫困', cityType: '农村', wealthLevel: '贫困', income: 50, education: 4, description: '生活在农村，家庭条件困难', wealthGrowthRate: 0.5 }
 ]
 
 export function generateCharacter() {

@@ -12,22 +12,22 @@
 
       <div class="stats-grid">
         <div class="stat-box">
-          <div class="stat-icon">#</div>
+          <div class="stat-icon">📝</div>
           <div class="stat-num">{{ stats.events }}</div>
           <div class="stat-label">经历事件</div>
         </div>
         <div class="stat-box">
-          <div class="stat-icon">*</div>
+          <div class="stat-icon">⭐</div>
           <div class="stat-num">{{ stats.important }}</div>
           <div class="stat-label">重要时刻</div>
         </div>
         <div class="stat-box">
-          <div class="stat-icon">$</div>
+          <div class="stat-icon">💰</div>
           <div class="stat-num">¥{{ stats.wealth.toLocaleString() }}</div>
           <div class="stat-label">一生积蓄</div>
         </div>
         <div class="stat-box">
-          <div class="stat-icon">@</div>
+          <div class="stat-icon">📍</div>
           <div class="stat-num">{{ stats.location }}</div>
           <div class="stat-label">最终住所</div>
         </div>
@@ -60,7 +60,9 @@
       >
         <div class="milestone-year">{{ milestone.year }}</div>
         <div class="milestone-content">
-          <div class="milestone-title">{{ milestone.title }}</div>
+          <div class="milestone-title">
+            {{ milestone.title }}
+          </div>
           <div class="milestone-desc">{{ milestone.description }}</div>
         </div>
       </div>
@@ -75,7 +77,7 @@
 
     <div class="action-buttons">
       <button class="btn btn-primary" @click="restartGame">+ 再活一次</button>
-      <button class="btn btn-secondary">> 分享人生</button>
+      <!-- <button class="btn btn-secondary">> 分享人生</button> -->
     </div>
   </div>
 </template>
@@ -95,23 +97,26 @@ const emit = defineEmits(['set-page', 'update:game-state'])
 // 从gameState获取真实数据
 const name = computed(() => props.gameState.character?.name || '无名氏')
 const avatar = computed(() => {
-  // 根据年龄选择头像
   const age = props.gameState.age || 0
-  if (age < 18) return '[B]'
-  if (age < 30) return '[y]'
-  if (age < 50) return '[M]'
-  if (age < 70) return '[m]'
-  return '[O]'
+  const gender = props.gameState.character?.gender || 'male'
+
+  if (age < 1) return '👶'
+  if (age < 3) return '👶'
+  if (age < 12) return gender === 'female' ? '👧' : '👦'
+  if (age < 18) return gender === 'female' ? '👧' : '👦'
+  if (age < 40) return gender === 'female' ? '👩' : '👨'
+  if (age < 60) return gender === 'female' ? '👩' : '👨'
+  return gender === 'female' ? '👵' : '👴'
 })
 
 const birthDate = computed(() => {
-  const birth = props.gameState.character?.birthDate || '1985年 6月 15日'
-  return birth.replace(/[年月]/g, '.').replace(/[日]/g, '')
+  const birth = props.gameState.character?.birthDate || '1985年'
+  return birth.match(/\d+/)?.[0] + '年' || '1985年'
 })
 
 const deathDate = computed(() => {
-  const death = props.gameState.currentDate || '2024年 3月 17日'
-  return death.replace(/[年月]/g, '.').replace(/[日]/g, '')
+  const death = props.gameState.currentDate || '2024年'
+  return death.match(/\d+/)?.[0] + '年' || '2024年'
 })
 
 const age = computed(() => props.gameState.age || 0)
@@ -138,7 +143,7 @@ const achievements = computed(() => {
   if (hasEducation) {
     achievements.push({
       id: 1,
-      icon: 'i',
+      icon: '📚',
       name: '学有所成',
       description: '完成了学业教育'
     })
@@ -151,7 +156,7 @@ const achievements = computed(() => {
   if (hasWork) {
     achievements.push({
       id: 2,
-      icon: 'ii',
+      icon: '💼',
       name: '事业有成',
       description: '拥有了自己的职业生涯'
     })
@@ -164,7 +169,7 @@ const achievements = computed(() => {
   if (hasFamily) {
     achievements.push({
       id: 3,
-      icon: 'iii',
+      icon: '🏠',
       name: '家庭美满',
       description: '建立了幸福的家庭'
     })
@@ -174,7 +179,7 @@ const achievements = computed(() => {
   if (age.value >= 70) {
     achievements.push({
       id: 4,
-      icon: 'iv',
+      icon: '🎋',
       name: '福寿双全',
       description: `享年${age.value}岁，寿终正寝`
     })
@@ -185,18 +190,70 @@ const achievements = computed(() => {
 
 const milestones = computed(() => {
   const events = props.gameState.events || []
-  const bigEvents = events.filter(event => event.bigEvent)
+  const bigEvents = events.filter(event => event.bigEvent && event.eventCategory === 'self')
 
-  return bigEvents.slice(-4).map((event, index) => ({
+  // 重要事件标题列表 - 好坏转折都要
+  const importantTitles = [
+    '出生', '升学', '毕业', '结婚', '离婚', '生子', '第二个孩子',
+    '创业成功', '创业失败', '晋升', '退休', '买房',
+    '表彰', '金婚', '中年危机', '下岗', '大病'
+  ]
+
+  // 只保留重要的个人事件
+  const importantEvents = bigEvents.filter(event =>
+    importantTitles.includes(event.bigEvent.title)
+  )
+
+  // 最多显示6个
+  return importantEvents.slice(0, 6).map((event) => ({
     id: event.id,
     year: event.date?.match(/(\d+)年/)?.[1] || '',
+    age: event.age || 0,
     title: event.bigEvent.title,
-    description: event.bigEvent.description
+    description: event.bigEvent.description,
+    eventCategory: event.eventCategory || 'self',
+    tags: event.tags || [],
+    location: event.location || '',
+    fullEvent: event
   }))
 })
 
-const quote = ref('人的一生应当这样度过：当他回首往事时，不因虚度年华而悔恨，也不因碌碌无为而羞耻。')
-const quoteAuthor = ref('奥斯特洛夫斯基《钢铁是怎样炼成的》')
+// 名人语录库
+const quotes = [
+  { text: '人的一生应当这样度过：当他回首往事时，不因虚度年华而悔恨，也不因碌碌无为而羞耻。', author: '奥斯特洛夫斯基《钢铁是怎样炼成的》' },
+  { text: '人生的价值，并不是用时间，而是用深度去衡量的。', author: '列夫·托尔斯泰' },
+  { text: '人的生命是有限的，可是为人民服务是无限的。', author: '雷锋' },
+  { text: '路是脚踏出来的，历史是人写出来的，人的每一步行动都在书写自己的历史。', author: '吉鸿昌' },
+  { text: '生活就像海洋，只有意志坚强的人，才能到达彼岸。', author: '马克思' },
+  { text: '人生天地之间，若白驹过隙，忽然而已。', author: '庄子' },
+  { text: '我从未让学校教条妨碍我的人生学习。', author: '本杰明·富兰克林' },
+  { text: '不要等待，时机永远不会恰到好处。', author: '拿破仑·希尔' },
+  { text: '人生不是一种享乐，而是一桩十分沉重的工作。', author: '列夫·托尔斯泰' },
+  { text: '人的一切都应该是美丽的：面貌、心灵、思想和行动。', author: '奥斯特洛夫斯基' },
+  { text: '当一个人用工作去迎接光明，光明很快就会来照耀着他。', author: '冯学峰' },
+  { text: '人生如同道路，最近的捷径往往是最坏的路。', author: '培根' },
+  { text: '生命的意义在于付出，在于给予，而不是在于接受，也不是在于争取。', author: '巴金' },
+  { text: '人生自古谁无死，留取丹心照汗青。', author: '文天祥' },
+  { text: '人固有一死，或重于泰山，或轻于鸿毛。', author: '司马迁' },
+  { text: '生当作人杰，死亦为鬼雄。', author: '李清照' },
+  { text: '人生如逆旅，我亦是行人。', author: '苏轼' },
+  { text: '我们不是因为年老而停止游戏，我们是因为停止游戏才变老。', author: '萧伯纳' },
+  { text: '青春不是人生的一段时期，而是心灵的一种状态。', author: '塞涅卡' },
+  { text: '如果你活着，别人还会继续；如果你死了，你的故事就结束了。', author: '马克·吐温' },
+  { text: '人生最终的价值在于觉醒和思考的能力，而不只在于生存。', author: '亚里士多德' },
+  { text: '三万六千日，夜夜当秉烛。', author: '李白' },
+  { text: '盛年不重来，一日难再晨。及时当勉励，岁月不待人。', author: '陶渊明' },
+  { text: '人生代代无穷已，江月年年望相似。', author: '张若虚' },
+  { text: '生年不满百，常怀千岁忧。', author: '古诗十九首' },
+  { text: '你只有一次生命，不要虚度此生。', author: '奥格·曼迪诺' },
+  { text: '人生没有如果，只有后果和结果。', author: '于丹' },
+  { text: '把每一个黎明看作是生命的开始，把每一个黄昏看作是你生命的小结。', author: '约翰·罗斯金' }
+]
+
+// 随机选择一条语录
+const randomQuote = quotes[Math.floor(Math.random() * quotes.length)]
+const quote = ref(randomQuote.text)
+const quoteAuthor = ref(randomQuote.author)
 
 // 记录人生到历史
 const recordLife = () => {
@@ -331,17 +388,22 @@ const restartGame = () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'Press Start 2P', monospace;
-  font-size: 24px;
-  color: var(--gold);
+  font-size: 48px;
+  line-height: 1;
   box-shadow:
     inset -4px -4px 0px rgba(0, 0, 0, 0.3),
     inset 4px 4px 0px rgba(255, 255, 255, 0.1);
   transition: transform 0.1s;
+  animation: portraitPulse 3s ease-in-out infinite;
+}
+
+@keyframes portraitPulse {
+  0%, 100% { transform: scale(1); box-shadow: inset -4px -4px 0px rgba(0, 0, 0, 0.3), inset 4px 4px 0px rgba(255, 255, 255, 0.1); }
+  50% { transform: scale(1.03); box-shadow: inset -4px -4px 0px rgba(0, 0, 0, 0.3), inset 4px 4px 0px rgba(255, 255, 255, 0.1), 0 0 20px rgba(255, 217, 61, 0.3); }
 }
 
 .portrait:hover {
-  transform: scale(1.05);
+  transform: scale(1.08);
 }
 
 .person-name {
@@ -377,9 +439,7 @@ const restartGame = () => {
 }
 
 .stat-icon {
-  font-family: 'Press Start 2P', monospace;
-  font-size: 16px;
-  color: var(--accent2);
+  font-size: 20px;
   margin-bottom: 8px;
 }
 
@@ -437,9 +497,8 @@ const restartGame = () => {
 }
 
 .achievement-icon {
-  font-family: 'Press Start 2P', monospace;
-  font-size: 14px;
-  color: var(--gold);
+  font-size: 24px;
+  line-height: 1;
 }
 
 .achievement-text {

@@ -8,37 +8,18 @@
       <div class="progress-fill"></div>
     </div>
 
-    <div class="step-indicator">
-      <div class="step-dot completed"></div>
-      <div class="step-dot active"></div>
-      <div class="step-dot"></div>
-      <div class="step-dot"></div>
-    </div>
-
     <div class="card">
-      <p class="section-title">穿越到哪一天</p>
+      <div class="year-section">
+        <div class="year-display">
+          <div class="year-icon">📅</div>
+          <div class="year-text">{{ selectedYear }}年</div>
+        </div>
 
-      <div class="date-display">
-        <div class="date-text">{{ selectedYear }}年 {{ selectedMonth }}月 {{ selectedDay }}日</div>
-        <div class="date-label">{{ weekday }} · {{ lunarDate }}</div>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">姓名</label>
-        <input type="text" v-model="userName" class="pixel-input" placeholder="请输入您的姓名">
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">出生地</label>
-        <input type="text" v-model="birthPlace" class="pixel-input" placeholder="请输入您的出生地">
-      </div>
-
-      <div class="selector-group">
-        <div class="selector-item">
-          <div class="selector-label">年份</div>
+        <div class="year-selector">
+          <div class="selector-label">上下滑动选择年份</div>
           <div class="selector">
             <div class="selector-highlight"></div>
-            <div class="selector-scroll" ref="yearScroll">
+            <div class="selector-scroll" ref="yearScrollInner">
               <div
                 v-for="year in years"
                 :key="year"
@@ -49,43 +30,45 @@
             </div>
           </div>
         </div>
+      </div>
 
-        <div class="selector-item">
-          <div class="selector-label">月份</div>
-          <div class="selector">
-            <div class="selector-highlight"></div>
-            <div class="selector-scroll" ref="monthScroll">
-              <div
-                v-for="month in months"
-                :key="month"
-                class="selector-item-inner"
-                :class="{ active: selectedMonth === month }"
-                @click="selectMonth(month)"
-              >{{ month.toString().padStart(2, '0') }}</div>
+      <div class="form-section">
+        <div class="form-group">
+          <label class="form-label">姓名</label>
+          <input type="text" v-model="userName" class="pixel-input" placeholder="请输入您的姓名">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">性别</label>
+          <div class="gender-selector">
+            <div
+              class="gender-option"
+              :class="{ active: selectedGender === 'male' }"
+              @click="selectedGender = 'male'"
+            >
+              <span class="gender-icon">♂</span>
+              <span>男</span>
+            </div>
+            <div
+              class="gender-option"
+              :class="{ active: selectedGender === 'female' }"
+              @click="selectedGender = 'female'"
+            >
+              <span class="gender-icon">♀</span>
+              <span>女</span>
             </div>
           </div>
         </div>
 
-        <div class="selector-item">
-          <div class="selector-label">日期</div>
-          <div class="selector">
-            <div class="selector-highlight"></div>
-            <div class="selector-scroll" ref="dayScroll">
-              <div
-                v-for="day in days"
-                :key="day"
-                class="selector-item-inner"
-                :class="{ active: selectedDay === day }"
-                @click="selectDay(day)"
-              >{{ day.toString().padStart(2, '0') }}</div>
-            </div>
-          </div>
+        <div class="form-group">
+          <label class="form-label">出生地</label>
+          <input type="text" v-model="birthPlace" class="pixel-input" placeholder="请输入您的出生地">
         </div>
       </div>
 
       <div class="history-event">
         <div class="history-event-title">
-          <span>#</span> 历史上的今天
+          <span>#</span> 历史上这一年
         </div>
         <div class="history-event-content">
           {{ historyEvent }}
@@ -94,14 +77,14 @@
 
       <div class="action-buttons">
         <button class="btn btn-secondary" @click="$emit('prev-page')">上一步</button>
-        <button class="btn btn-primary" @click="confirmBirth">确认出生</button>
+        <button class="btn btn-primary" @click="confirmBirth">下一步</button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { historyEvents } from '../data/historyEvents.js'
 
 const props = defineProps({
@@ -113,108 +96,62 @@ const props = defineProps({
 
 const emit = defineEmits(['update:game-state', 'next-page', 'prev-page'])
 
-const selectedYear = ref(1985)
-const selectedMonth = ref(6)
-const selectedDay = ref(15)
+const selectedYear = ref(1949)
 const userName = ref(props.gameState?.userName || '')
 const birthPlace = ref(props.gameState?.birthPlace || '')
+const selectedGender = ref(props.gameState?.gender || 'male')
 
 const years = Array.from({ length: 76 }, (_, i) => 1949 + i)
-const months = Array.from({ length: 12 }, (_, i) => i + 1)
 
-const days = computed(() => {
-  const isLeapYear = (year) => {
-    return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0
-  }
-  const monthDays = [31, isLeapYear(selectedYear.value) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
-  return Array.from({ length: monthDays[selectedMonth.value - 1] }, (_, i) => i + 1)
-})
-
-const weekday = computed(() => {
-  const date = new Date(selectedYear.value, selectedMonth.value - 1, selectedDay.value)
-  const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六']
-  return weekdays[date.getDay()]
-})
-
-const lunarDate = ref('乙丑年五月廿八')
 const historyEvent = ref('')
 
-const yearScroll = ref(null)
-const monthScroll = ref(null)
-const dayScroll = ref(null)
+const yearScrollInner = ref(null)
 
 const selectYear = (year) => {
   selectedYear.value = year
-  if (selectedDay.value > days.value.length) {
-    selectedDay.value = days.value.length
-  }
-  updateHistoryEvent()
-}
-
-const selectMonth = (month) => {
-  selectedMonth.value = month
-  if (selectedDay.value > days.value.length) {
-    selectedDay.value = days.value.length
-  }
-  updateHistoryEvent()
-}
-
-const selectDay = (day) => {
-  selectedDay.value = day
   updateHistoryEvent()
 }
 
 const updateHistoryEvent = () => {
   const yearEvents = historyEvents[selectedYear.value]
   if (yearEvents && yearEvents.length > 0) {
-    // 随机选择该年的一个事件
     const event = yearEvents[Math.floor(Math.random() * yearEvents.length)]
     historyEvent.value = `${event.title}：${event.description}`
   } else {
-    historyEvent.value = `${selectedYear.value}年虽然没有重大历史记录，但你出生的这一天，注定将写下属于你自己的故事。`
+    historyEvent.value = `${selectedYear.value}年虽然没有重大历史记录，但你出生的这一年，注定将写下属于你自己的故事。`
   }
 }
 
 const confirmBirth = () => {
-  const birthDate = `${selectedYear.value}年${selectedMonth.value}月${selectedDay.value}日`
+  const birthDate = `${selectedYear.value}年`
   emit('update:game-state', {
     userName: userName.value,
     birthDate: birthDate,
-    birthPlace: birthPlace.value
+    birthPlace: birthPlace.value,
+    gender: selectedGender.value
   })
   emit('next-page')
 }
 
 onMounted(() => {
-  // 初始化滚动位置
-  scrollToSelected(yearScroll.value, selectedYear.value - 1949)
-  scrollToSelected(monthScroll.value, selectedMonth.value - 1)
-  scrollToSelected(dayScroll.value, selectedDay.value - 1)
-  // 初始化历史事件
+  scrollToSelected(yearScrollInner.value, selectedYear.value - 1949)
   updateHistoryEvent()
 })
 
 const scrollToSelected = (scrollElement, index) => {
   if (scrollElement) {
     const itemHeight = 40
-    const scrollTop = index * itemHeight - (scrollElement.clientHeight / 2 - itemHeight / 2)
-    scrollElement.scrollTop = scrollTop
+    const containerHeight = scrollElement.clientHeight
+    const maxScroll = scrollElement.scrollHeight - containerHeight
+    const targetScrollTop = index * itemHeight - (containerHeight / 2 - itemHeight / 2)
+    scrollElement.scrollTop = Math.max(0, Math.min(maxScroll, targetScrollTop))
   }
 }
 
-watch(selectedYear, () => {
-  scrollToSelected(yearScroll.value, selectedYear.value - 1949)
+watch(selectedYear, (newYear) => {
+  scrollToSelected(yearScrollInner.value, newYear - 1949)
 })
 
-watch(selectedMonth, () => {
-  scrollToSelected(monthScroll.value, selectedMonth.value - 1)
-})
-
-watch(selectedDay, () => {
-  scrollToSelected(dayScroll.value, selectedDay.value - 1)
-})
-
-// 监听 gameState 变化，当游戏重置时同步更新内部状态
 watch(() => props.gameState, (newState) => {
   if (newState) {
     userName.value = newState.userName || ''
@@ -240,7 +177,7 @@ watch(() => props.gameState, (newState) => {
 
 .header {
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .header h1 {
@@ -250,10 +187,32 @@ watch(() => props.gameState, (newState) => {
   text-shadow: 2px 2px 0 var(--primary);
 }
 
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: var(--bg);
+  border: 3px solid var(--pixel-border);
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--accent),
+    var(--accent) 8px,
+    var(--gold) 8px,
+    var(--gold) 16px
+  );
+  width: 33%;
+  transition: width 0.3s ease;
+}
+
 .card {
   background: var(--card-bg);
   border: 4px solid var(--pixel-border);
-  padding: 28px 24px;
+  padding: 20px;
   position: relative;
   box-shadow:
     inset -4px -4px 0px rgba(0, 0, 0, 0.3),
@@ -277,61 +236,53 @@ watch(() => props.gameState, (newState) => {
   );
 }
 
-.section-title {
-  font-family: 'Press Start 2P', monospace;
-  font-size: 8px;
-  color: var(--accent2);
-  letter-spacing: 2px;
+.year-section {
+  display: flex;
+  align-items: center;
+  gap: 16px;
   margin-bottom: 20px;
-  text-align: center;
-}
-
-.date-display {
+  padding: 16px;
   background: var(--bg);
-  padding: 24px;
-  text-align: center;
-  margin-bottom: 24px;
   border: 4px solid var(--pixel-border);
   box-shadow: inset 4px 4px 0 rgba(0,0,0,0.3);
 }
 
-.date-text {
+.year-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-width: 80px;
+}
+
+.year-icon {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.year-text {
   font-family: 'Press Start 2P', monospace;
   font-size: 14px;
   color: var(--gold);
-  margin-bottom: 8px;
 }
 
-.date-label {
-  font-size: 12px;
-  color: var(--text-dim);
-  font-family: 'Noto Sans SC', monospace;
-}
-
-.selector-group {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  margin-bottom: 24px;
-}
-
-.selector-item {
-  text-align: center;
+.year-selector {
+  flex: 1;
 }
 
 .selector-label {
   font-family: 'Press Start 2P', monospace;
-  font-size: 8px;
+  font-size: 7px;
   color: var(--accent2);
   margin-bottom: 8px;
-  text-transform: uppercase;
+  text-align: center;
 }
 
 .selector {
   position: relative;
-  height: 120px;
+  height: 100px;
   overflow: hidden;
-  background: var(--bg);
+  background: var(--card-bg);
   border: 4px solid var(--pixel-border);
   box-shadow: inset 4px 4px 0 rgba(0,0,0,0.3);
 }
@@ -345,7 +296,7 @@ watch(() => props.gameState, (newState) => {
 }
 
 .selector-scroll::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 
 .selector-scroll::-webkit-scrollbar-track {
@@ -365,18 +316,18 @@ watch(() => props.gameState, (newState) => {
   cursor: pointer;
   transition: all 0.1s;
   font-family: 'Press Start 2P', monospace;
-  font-size: 12px;
+  font-size: 11px;
   color: var(--text);
 }
 
 .selector-item-inner:hover {
   background: rgba(232, 74, 95, 0.1);
+  color: var(--accent);
 }
 
 .selector-item-inner.active {
   background: var(--accent);
   color: white;
-  font-weight: bold;
   box-shadow: inset -2px -2px 0 rgba(0,0,0,0.3);
 }
 
@@ -390,18 +341,97 @@ watch(() => props.gameState, (newState) => {
   background: rgba(232, 74, 95, 0.15);
   pointer-events: none;
   border: 2px solid var(--accent);
+  z-index: 0;
+}
+
+.form-section {
+  margin-bottom: 16px;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-label {
+  display: block;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+  color: var(--accent2);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.pixel-input {
+  font-family: 'Noto Sans SC', sans-serif;
+  font-size: 14px;
+  padding: 12px 16px;
+  background: var(--bg);
+  border: 4px solid var(--pixel-border);
+  color: var(--text);
+  width: 100%;
+  outline: none;
+  box-shadow: inset 4px 4px 0 rgba(0,0,0,0.3);
+}
+
+.pixel-input:focus {
+  border-color: var(--accent);
+  box-shadow:
+    inset 4px 4px 0 rgba(0,0,0,0.3),
+    0 0 0 2px rgba(232, 74, 95, 0.3);
+}
+
+.pixel-input::placeholder {
+  color: var(--text-dim);
+}
+
+.gender-selector {
+  display: flex;
+  gap: 12px;
+}
+
+.gender-option {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: var(--bg);
+  border: 4px solid var(--pixel-border);
+  cursor: pointer;
+  transition: all 0.1s;
+  font-family: 'Noto Sans SC', sans-serif;
+  font-size: 14px;
+  color: var(--text);
+  box-shadow: inset 4px 4px 0 rgba(0,0,0,0.3);
+}
+
+.gender-option:hover {
+  border-color: var(--accent);
+}
+
+.gender-option.active {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+  box-shadow: inset -4px -4px 0 rgba(0,0,0,0.3);
+}
+
+.gender-icon {
+  font-size: 18px;
 }
 
 .history-event {
   background: var(--bg);
-  padding: 16px;
-  margin-bottom: 24px;
+  padding: 14px;
+  margin-bottom: 16px;
   border-left: 4px solid var(--accent);
 }
 
 .history-event-title {
   font-family: 'Press Start 2P', monospace;
-  font-size: 8px;
+  font-size: 7px;
   color: var(--accent);
   margin-bottom: 8px;
   display: flex;
@@ -410,10 +440,10 @@ watch(() => props.gameState, (newState) => {
 }
 
 .history-event-content {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--text);
-  line-height: 1.6;
-  font-family: 'Noto Sans SC', monospace;
+  line-height: 1.5;
+  font-family: 'Noto Sans SC', sans-serif;
 }
 
 .action-buttons {
@@ -463,90 +493,5 @@ watch(() => props.gameState, (newState) => {
 .btn-secondary:hover {
   background: var(--pixel-border);
   color: white;
-}
-
-.progress-bar {
-  width: 100%;
-  height: 8px;
-  background: var(--bg);
-  border: 3px solid var(--pixel-border);
-  margin-bottom: 16px;
-  overflow: hidden;
-}
-
-.progress-fill {
-  height: 100%;
-  background: repeating-linear-gradient(
-    90deg,
-    var(--accent),
-    var(--accent) 8px,
-    var(--gold) 8px,
-    var(--gold) 16px
-  );
-  width: 25%;
-  transition: width 0.3s ease;
-}
-
-.step-indicator {
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
-.step-dot {
-  width: 12px;
-  height: 12px;
-  background: var(--bg);
-  border: 3px solid var(--pixel-border);
-  transition: all 0.3s ease;
-}
-
-.step-dot.active {
-  background: var(--accent);
-  border-color: var(--accent);
-  box-shadow: 0 0 8px var(--accent);
-}
-
-.step-dot.completed {
-  background: var(--green);
-  border-color: var(--green);
-}
-
-.form-group {
-  margin-bottom: 20px;
-}
-
-.form-label {
-  display: block;
-  font-family: 'Press Start 2P', monospace;
-  font-size: 8px;
-  color: var(--accent2);
-  margin-bottom: 8px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.pixel-input {
-  font-family: 'Noto Sans SC', monospace;
-  font-size: 14px;
-  padding: 12px 16px;
-  background: var(--bg);
-  border: 4px solid var(--pixel-border);
-  color: var(--text);
-  width: 100%;
-  outline: none;
-  box-shadow: inset 4px 4px 0 rgba(0,0,0,0.3);
-}
-
-.pixel-input:focus {
-  border-color: var(--accent);
-  box-shadow:
-    inset 4px 4px 0 rgba(0,0,0,0.3),
-    0 0 0 2px rgba(232, 74, 95, 0.3);
-}
-
-.pixel-input::placeholder {
-  color: var(--text-dim);
 }
 </style>

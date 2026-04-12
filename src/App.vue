@@ -107,6 +107,7 @@ const nextPage = () => {
   if (currentPageIndex.value < pages.length - 1) {
     currentPageIndex.value++
     currentPage.value = pages[currentPageIndex.value].component
+    window.scrollTo(0, 0)
   }
 }
 
@@ -114,6 +115,7 @@ const prevPage = () => {
   if (currentPageIndex.value > 0) {
     currentPageIndex.value--
     currentPage.value = pages[currentPageIndex.value].component
+    window.scrollTo(0, 0)
   }
 }
 
@@ -122,6 +124,7 @@ const setPage = (pageName) => {
   if (index !== -1) {
     currentPageIndex.value = index
     currentPage.value = pages[index].component
+    window.scrollTo(0, 0)
   }
 }
 
@@ -130,6 +133,7 @@ const handleDataFromChild = (data) => {
   if (data.userName) gameState.value.userName = data.userName
   if (data.birthDate) gameState.value.birthDate = data.birthDate
   if (data.birthPlace) gameState.value.birthPlace = data.birthPlace
+  if (data.gender) gameState.value.gender = data.gender
   if (data.character) gameState.value.character = data.character
   if (data.isGameStarted !== undefined) gameState.value.isGameStarted = data.isGameStarted
   if (data.currentDate) gameState.value.currentDate = data.currentDate
